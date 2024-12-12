@@ -72,8 +72,17 @@ const Index = () => {
         const { data: publicUrl } = supabase.storage
           .from("media")
           .getPublicUrl(item.file_path);
+
+        // Validate and cast the type to either "video" or "image"
+        const validatedType = item.type === "video" || item.type === "image" 
+          ? item.type as "video" | "image"
+          : "image"; // Default to image if type is invalid
+
         return {
-          ...item,
+          id: item.id,
+          title: item.title,
+          type: validatedType,
+          file_path: item.file_path,
           url: publicUrl.publicUrl,
         };
       })
@@ -83,7 +92,6 @@ const Index = () => {
   };
 
   const handleMediaDrop = async (mediaItem: MediaItem, screenId: string) => {
-    // Update local state
     setScreens(currentScreens =>
       currentScreens.map(screen =>
         screen.id === screenId
@@ -99,7 +107,6 @@ const Index = () => {
       )
     );
 
-    // Broadcast the update to all connected clients
     await supabase.channel('screens').send({
       type: 'broadcast',
       event: 'screen_update',
@@ -125,7 +132,6 @@ const Index = () => {
       <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Telas Ativas - Ocupa 4 colunas */}
         <div className="lg:col-span-4 bg-white rounded-lg shadow-sm p-4">
           <h2 className="text-xl font-semibold mb-4">Telas Ativas</h2>
           <ScreenGrid 
@@ -135,13 +141,11 @@ const Index = () => {
           />
         </div>
 
-        {/* Galeria de Mídia - Ocupa 5 colunas */}
         <div className="lg:col-span-5 bg-white rounded-lg shadow-sm p-4">
           <h2 className="text-xl font-semibold mb-4">Galeria de Mídia</h2>
           <MediaGallery items={mediaItems} onSelect={() => {}} />
         </div>
 
-        {/* Upload - Ocupa 3 colunas */}
         <div className="lg:col-span-3 bg-white rounded-lg shadow-sm p-4">
           <h2 className="text-xl font-semibold mb-4">Upload</h2>
           <FileUpload onUploadComplete={handleUploadComplete} />
