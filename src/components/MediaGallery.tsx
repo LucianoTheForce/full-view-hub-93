@@ -1,6 +1,6 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Monitor, Play, Image as ImageIcon } from "lucide-react";
+import { Play, Image as ImageIcon } from "lucide-react";
 
 interface MediaItem {
   id: string;
@@ -15,13 +15,19 @@ interface MediaGalleryProps {
 }
 
 export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) => {
+  const handleDragStart = (e: React.DragEvent, item: MediaItem) => {
+    e.dataTransfer.setData("application/json", JSON.stringify(item));
+  };
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 p-4">
       {items.map((item) => (
         <Card
           key={item.id}
-          className="group relative overflow-hidden cursor-pointer hover:ring-2 hover:ring-media-hover transition-all duration-200"
+          className="group relative overflow-hidden cursor-move hover:ring-2 hover:ring-media-hover transition-all duration-200"
           onClick={() => onSelect(item)}
+          draggable
+          onDragStart={(e) => handleDragStart(e, item)}
         >
           <div className="aspect-video relative">
             {item.type === "video" ? (

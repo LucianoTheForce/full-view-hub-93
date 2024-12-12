@@ -1,24 +1,59 @@
 import React, { useState, useEffect } from "react";
 import { MediaGallery } from "@/components/MediaGallery";
 import { ScreenGrid } from "@/components/ScreenGrid";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/hooks/use-toast";
 import { FileUpload } from "@/components/FileUpload";
+import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
-const MOCK_SCREENS = [
-  { id: "screen1", name: "Tela 1", isActive: true },
-  { id: "screen2", name: "Tela 2", isActive: false },
-  { id: "screen3", name: "Tela 3", isActive: true },
-];
+interface MediaItem {
+  id: string;
+  type: "video" | "image";
+  url: string;
+  title: string;
+  file_path: string;
+}
+
+interface Screen {
+  id: string;
+  name: string;
+  isActive: boolean;
+  currentContent?: {
+    type: "video" | "image";
+    title: string;
+    url: string;
+  };
+}
 
 const Index = () => {
-  const [selectedScreen, setSelectedScreen] = useState<string | null>(null);
-  const [mediaItems, setMediaItems] = useState<any[]>([]);
+  const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [screens, setScreens] = useState<Screen[]>([
+    { id: "screen1", name: "Tela 1", isActive: true },
+    { id: "screen2", name: "Tela 2", isActive: false },
+    { id: "screen3", name: "Tela 3", isActive: true },
+  ]);
 
   useEffect(() => {
     loadMediaItems();
+    subscribeToScreenUpdates();
   }, []);
+
+  const subscribeToScreenUpdates = () => {
+    const channel = supabase.channel('screens')
+      .on('broadcast', { event: 'screen_update' }, ({ payload }) => {
+        setScreens(currentScreens => 
+          currentScreens.map(screen => 
+            screen.id === payload.screenId 
+              ? { ...screen, currentContent: payload.content }
+              : screen
+          )
+        );
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  };
 
   const loadMediaItems = async () => {
     const { data, error } = await supabase
@@ -28,11 +63,7 @@ const Index = () => {
 
     if (error) {
       console.error("Erro ao carregar mídia:", error);
-      toast({
-        title: "Erro ao carregar mídia",
-        description: "Não foi possível carregar os itens de mídia.",
-        variant: "destructive",
-      });
+      toast.error("Não foi possível carregar os itens de mídia.");
       return;
     }
 
@@ -51,28 +82,38 @@ const Index = () => {
     setMediaItems(itemsWithUrls);
   };
 
-  const handleMediaSelect = (media: { id: string; title: string }) => {
-    if (!selectedScreen) {
-      toast({
-        title: "Selecione uma tela",
-        description: "Por favor, selecione uma tela antes de escolher o conteúdo.",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleMediaDrop = async (mediaItem: MediaItem, screenId: string) => {
+    // Update local state
+    setScreens(currentScreens =>
+      currentScreens.map(screen =>
+        screen.id === screenId
+          ? {
+              ...screen,
+              currentContent: {
+                type: mediaItem.type,
+                title: mediaItem.title,
+                url: mediaItem.url,
+              },
+            }
+          : screen
+      )
+    );
 
-    toast({
-      title: "Conteúdo atribuído",
-      description: `${media.title} foi atribuído à tela selecionada.`,
+    // Broadcast the update to all connected clients
+    await supabase.channel('screens').send({
+      type: 'broadcast',
+      event: 'screen_update',
+      payload: {
+        screenId,
+        content: {
+          type: mediaItem.type,
+          title: mediaItem.title,
+          url: mediaItem.url,
+        },
+      },
     });
-  };
 
-  const handleScreenSelect = (screen: { id: string }) => {
-    setSelectedScreen(screen.id);
-    toast({
-      title: "Tela selecionada",
-      description: "Agora selecione o conteúdo que deseja exibir.",
-    });
+    toast.success(`Conteúdo atualizado na ${screens.find(s => s.id === screenId)?.name}`);
   };
 
   const handleUploadComplete = () => {
@@ -83,28 +124,29 @@ const Index = () => {
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
       
-      <Tabs defaultValue="screens" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="screens">Telas Ativas</TabsTrigger>
-          <TabsTrigger value="media">Galeria de Mídia</TabsTrigger>
-          <TabsTrigger value="upload">Upload</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="screens" className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Telas Disponíveis</h2>
-          <ScreenGrid screens={MOCK_SCREENS} onScreenSelect={handleScreenSelect} />
-        </TabsContent>
-        
-        <TabsContent value="media" className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Conteúdo Disponível</h2>
-          <MediaGallery items={mediaItems} onSelect={handleMediaSelect} />
-        </TabsContent>
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Telas Ativas - Ocupa 4 colunas */}
+        <div className="lg:col-span-4 bg-white rounded-lg shadow-sm p-4">
+          <h2 className="text-xl font-semibold mb-4">Telas Ativas</h2>
+          <ScreenGrid 
+            screens={screens} 
+            onScreenSelect={() => {}} 
+            onDrop={handleMediaDrop}
+          />
+        </div>
 
-        <TabsContent value="upload" className="space-y-4">
-          <h2 className="text-xl font-semibold mb-4">Upload de Arquivos</h2>
+        {/* Galeria de Mídia - Ocupa 5 colunas */}
+        <div className="lg:col-span-5 bg-white rounded-lg shadow-sm p-4">
+          <h2 className="text-xl font-semibold mb-4">Galeria de Mídia</h2>
+          <MediaGallery items={mediaItems} onSelect={() => {}} />
+        </div>
+
+        {/* Upload - Ocupa 3 colunas */}
+        <div className="lg:col-span-3 bg-white rounded-lg shadow-sm p-4">
+          <h2 className="text-xl font-semibold mb-4">Upload</h2>
           <FileUpload onUploadComplete={handleUploadComplete} />
-        </TabsContent>
-      </Tabs>
+        </div>
+      </div>
     </div>
   );
 };
