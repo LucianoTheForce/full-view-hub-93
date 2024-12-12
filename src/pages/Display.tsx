@@ -1,20 +1,30 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Display = () => {
   const { screenId } = useParams();
   const [content, setContent] = useState<{
     type: "video" | "image";
     url: string;
+    title: string;
   } | null>(null);
 
   useEffect(() => {
-    // Aqui você implementaria a lógica para buscar o conteúdo atual da tela
-    // Por enquanto, vamos usar um conteúdo de exemplo
-    setContent({
-      type: "image",
-      url: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-    });
+    const loadScreenContent = async () => {
+      // Aqui você pode implementar a lógica para carregar o conteúdo atual da tela do Supabase
+      // Por enquanto, vamos usar um conteúdo de exemplo
+      setContent({
+        type: "image",
+        url: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
+        title: "Conteúdo de exemplo"
+      });
+    };
+
+    loadScreenContent();
+
+    // Atualiza o título da janela
+    document.title = `Tela ${screenId}`;
   }, [screenId]);
 
   if (!content) {
@@ -35,9 +45,14 @@ const Display = () => {
           loop
           muted
           playsInline
+          controls
         />
       ) : (
-        <img src={content.url} alt="" className="w-full h-full object-contain" />
+        <img 
+          src={content.url} 
+          alt={content.title} 
+          className="w-full h-full object-contain" 
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Monitor } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 interface Screen {
   id: string;
@@ -18,6 +19,20 @@ interface ScreenGridProps {
 }
 
 export const ScreenGrid: React.FC<ScreenGridProps> = ({ screens, onScreenSelect }) => {
+  const handleScreenClick = (screen: Screen) => {
+    // Chama o callback original
+    onScreenSelect(screen);
+    
+    // Abre a tela em uma nova janela
+    const displayUrl = `/display/${screen.id}`;
+    window.open(displayUrl, `screen_${screen.id}`, 'width=1024,height=768');
+    
+    toast({
+      title: "Tela aberta",
+      description: `A tela ${screen.name} foi aberta em uma nova janela.`
+    });
+  };
+
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
       {screens.map((screen) => (
@@ -25,8 +40,8 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({ screens, onScreenSelect 
           key={screen.id}
           className={`cursor-pointer transition-all duration-200 ${
             screen.isActive ? "ring-2 ring-media-active" : ""
-          }`}
-          onClick={() => onScreenSelect(screen)}
+          } hover:shadow-lg`}
+          onClick={() => handleScreenClick(screen)}
         >
           <div className="p-4">
             <div className="flex items-center justify-center mb-3">
