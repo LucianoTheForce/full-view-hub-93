@@ -1,30 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MediaGallery } from "@/components/MediaGallery";
 import { ScreenGrid } from "@/components/ScreenGrid";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { toast } from "@/components/ui/use-toast";
-
-// Dados de exemplo
-const MOCK_MEDIA = [
-  {
-    id: "1",
-    type: "image" as const,
-    url: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-    title: "Workspace Setup",
-  },
-  {
-    id: "2",
-    type: "image" as const,
-    url: "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b",
-    title: "Tech Display",
-  },
-  {
-    id: "3",
-    type: "image" as const,
-    url: "https://images.unsplash.com/photo-1518770660439-4636190af475",
-    title: "Circuit Board",
-  },
-];
+import { toast } from "@/hooks/use-toast";
+import { FileUpload } from "@/components/FileUpload";
+import { supabase } from "@/integrations/supabase/client";
 
 const MOCK_SCREENS = [
   { id: "screen1", name: "Tela 1", isActive: true },
@@ -34,6 +14,42 @@ const MOCK_SCREENS = [
 
 const Index = () => {
   const [selectedScreen, setSelectedScreen] = useState<string | null>(null);
+  const [mediaItems, setMediaItems] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadMediaItems();
+  }, []);
+
+  const loadMediaItems = async () => {
+    const { data, error } = await supabase
+      .from("media_items")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Erro ao carregar mídia:", error);
+      toast({
+        title: "Erro ao carregar mídia",
+        description: "Não foi possível carregar os itens de mídia.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const itemsWithUrls = await Promise.all(
+      data.map(async (item) => {
+        const { data: publicUrl } = supabase.storage
+          .from("media")
+          .getPublicUrl(item.file_path);
+        return {
+          ...item,
+          url: publicUrl.publicUrl,
+        };
+      })
+    );
+
+    setMediaItems(itemsWithUrls);
+  };
 
   const handleMediaSelect = (media: { id: string; title: string }) => {
     if (!selectedScreen) {
@@ -59,6 +75,10 @@ const Index = () => {
     });
   };
 
+  const handleUploadComplete = () => {
+    loadMediaItems();
+  };
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
@@ -67,6 +87,7 @@ const Index = () => {
         <TabsList>
           <TabsTrigger value="screens">Telas Ativas</TabsTrigger>
           <TabsTrigger value="media">Galeria de Mídia</TabsTrigger>
+          <TabsTrigger value="upload">Upload</TabsTrigger>
         </TabsList>
         
         <TabsContent value="screens" className="space-y-4">
@@ -76,7 +97,12 @@ const Index = () => {
         
         <TabsContent value="media" className="space-y-4">
           <h2 className="text-xl font-semibold mb-4">Conteúdo Disponível</h2>
-          <MediaGallery items={MOCK_MEDIA} onSelect={handleMediaSelect} />
+          <MediaGallery items={mediaItems} onSelect={handleMediaSelect} />
+        </TabsContent>
+
+        <TabsContent value="upload" className="space-y-4">
+          <h2 className="text-xl font-semibold mb-4">Upload de Arquivos</h2>
+          <FileUpload onUploadComplete={handleUploadComplete} />
         </TabsContent>
       </Tabs>
     </div>
