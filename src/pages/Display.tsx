@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft } from "lucide-react";
 
 const Display = () => {
   const { screenId } = useParams();
+  const navigate = useNavigate();
   const [content, setContent] = useState<{
     type: "video" | "image";
     url: string;
@@ -36,7 +39,16 @@ const Display = () => {
   }
 
   return (
-    <div className="w-screen h-screen bg-black">
+    <div className="relative w-screen h-screen bg-black">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="absolute top-4 left-4 text-white hover:bg-white/10"
+        onClick={() => navigate('/')}
+      >
+        <ArrowLeft className="h-6 w-6" />
+      </Button>
+      
       {content.type === "video" ? (
         <video
           src={content.url}
