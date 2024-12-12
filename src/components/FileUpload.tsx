@@ -39,14 +39,23 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
       const fileName = `${crypto.randomUUID()}-${file.name}`;
       const filePath = `${fileType}s/${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
-        .from("media")
-        .upload(filePath, file, {
-          onUploadProgress: (progress) => {
-            const percent = (progress.loaded / progress.total) * 100;
-            setProgress(percent);
-          },
+      // Simulate upload progress since Supabase doesn't provide progress events
+      const progressInterval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + 10;
         });
+      }, 100);
+
+      const { error: uploadError } = await supabase.storage
+        .from("media")
+        .upload(filePath, file);
+
+      clearInterval(progressInterval);
+      setProgress(100);
 
       if (uploadError) throw uploadError;
 
