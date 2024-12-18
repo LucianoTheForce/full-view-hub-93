@@ -95,9 +95,7 @@ const Index = () => {
     );
 
     try {
-      // Create and subscribe to the channel with a unique identifier
-      const channelId = `screen_${screenId}_${Date.now()}`;
-      const channel = supabase.channel(channelId);
+      const channel = supabase.channel(`screen_${screenId}`);
       
       const subscriptionStatus = await channel.subscribe();
       console.log(`Channel subscription status for ${screenId}:`, subscriptionStatus);

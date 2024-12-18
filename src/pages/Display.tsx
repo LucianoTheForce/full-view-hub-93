@@ -24,25 +24,21 @@ const Display = () => {
           setContent(currentScreen.currentContent);
         }
 
-        // Subscribe to all possible channels for this screen
-        const channels = [];
-        for (let i = 0; i < 10; i++) {
-          const channel = supabase.channel(`screen_${screenId}_${i}`)
-            .on('broadcast', { event: 'content_update' }, (payload) => {
-              console.log('Received broadcast update:', payload);
-              if (payload.payload?.content) {
-                setContent(payload.payload.content);
-              }
-            })
-            .subscribe((status) => {
-              console.log(`Subscription status for screen ${screenId}_${i}:`, status);
-            });
-          channels.push(channel);
-        }
+        // Subscribe to screen updates using a single channel
+        const channel = supabase.channel(`screen_${screenId}`)
+          .on('broadcast', { event: 'content_update' }, (payload) => {
+            console.log('Received broadcast update:', payload);
+            if (payload.payload?.screenId === screenId && payload.payload?.content) {
+              setContent(payload.payload.content);
+            }
+          })
+          .subscribe((status) => {
+            console.log(`Subscription status for screen ${screenId}:`, status);
+          });
 
         return () => {
-          console.log(`Unsubscribing from all channels for screen ${screenId}`);
-          channels.forEach(channel => channel.unsubscribe());
+          console.log(`Unsubscribing from screen ${screenId}`);
+          channel.unsubscribe();
         };
       } catch (error) {
         console.error('Error in loadScreenContent:', error);
