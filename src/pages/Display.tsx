@@ -8,12 +8,14 @@ const Display = () => {
     type: "video" | "image";
     url: string;
     title: string;
+    rotation?: number;
+    scale?: number;
+    backgroundColor?: string;
   } | null>(null);
 
   useEffect(() => {
     const loadScreenContent = async () => {
       try {
-        // Initial content load
         const screens = JSON.parse(localStorage.getItem('screens') || '[]');
         const currentScreen = screens.find((s: any) => s.id === screenId);
         console.log('Loading initial content for screen:', screenId, currentScreen);
@@ -21,7 +23,6 @@ const Display = () => {
           setContent(currentScreen.currentContent);
         }
 
-        // Subscribe to screen updates using a single channel
         const channel = supabase.channel(`screen_${screenId}`)
           .on('broadcast', { event: 'content_update' }, (payload) => {
             console.log('Received broadcast update:', payload);
@@ -54,12 +55,21 @@ const Display = () => {
     );
   }
 
+  const contentStyle = {
+    transform: `rotate(${content.rotation || 0}deg) scale(${content.scale || 1})`,
+    transition: 'transform 0.3s ease-in-out',
+  };
+
   return (
-    <div className="relative w-screen h-screen bg-black">
+    <div 
+      className="relative w-screen h-screen flex items-center justify-center"
+      style={{ backgroundColor: content.backgroundColor || 'black' }}
+    >
       {content.type === "video" ? (
         <video
           src={content.url}
           className="w-full h-full object-contain"
+          style={contentStyle}
           autoPlay
           loop
           muted
@@ -70,7 +80,8 @@ const Display = () => {
         <img 
           src={content.url} 
           alt={content.title} 
-          className="w-full h-full object-contain" 
+          className="w-full h-full object-contain"
+          style={contentStyle}
         />
       )}
     </div>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MediaGallery } from "@/components/MediaGallery";
 import { ScreenGrid } from "@/components/ScreenGrid";
+import { ScreenControls } from "@/components/ScreenControls";
 import { FileUpload } from "@/components/FileUpload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -23,11 +24,15 @@ interface Screen {
     type: "video" | "image";
     title: string;
     url: string;
+    rotation?: number;
+    scale?: number;
+    backgroundColor?: string;
   };
 }
 
 const Index = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
   const [screens, setScreens] = useState<Screen[]>(() => {
     const savedScreens = localStorage.getItem('screens');
     return savedScreens ? JSON.parse(savedScreens) : [
@@ -77,12 +82,13 @@ const Index = () => {
   };
 
   const handleMediaDrop = async (mediaItem: MediaItem, screenId: string) => {
-    console.log('Handling media drop for screen:', screenId, mediaItem);
-    
     const newContent = {
       type: mediaItem.type,
       title: mediaItem.title,
       url: mediaItem.url,
+      rotation: 0,
+      scale: 1,
+      backgroundColor: "black",
     };
 
     setScreens(currentScreens =>
@@ -123,6 +129,53 @@ const Index = () => {
     }
   };
 
+  const handleScreenSelect = (screen: Screen) => {
+    setSelectedScreen(screen);
+  };
+
+  const handleUpdateScreen = async (screenId: string, updates: any) => {
+    const updatedScreens = screens.map(screen => {
+      if (screen.id === screenId && screen.currentContent) {
+        return {
+          ...screen,
+          currentContent: {
+            ...screen.currentContent,
+            ...updates,
+          },
+        };
+      }
+      return screen;
+    });
+
+    setScreens(updatedScreens);
+    setSelectedScreen(updatedScreens.find(s => s.id === screenId) || null);
+
+    try {
+      const channel = supabase.channel(`screen_${screenId}`);
+      const screen = updatedScreens.find(s => s.id === screenId);
+      
+      if (screen?.currentContent) {
+        const response = await channel.send({
+          type: 'broadcast',
+          event: 'content_update',
+          payload: {
+            screenId,
+            content: screen.currentContent,
+          },
+        });
+
+        if (response === 'ok') {
+          toast.success(`Ajustes atualizados na ${screen.name}`);
+        }
+      }
+
+      await channel.unsubscribe();
+    } catch (error) {
+      console.error('Error updating screen:', error);
+      toast.error('Erro ao atualizar os ajustes. Tente novamente.');
+    }
+  };
+
   const handleUploadComplete = () => {
     loadMediaItems();
   };
@@ -152,6 +205,9 @@ const Index = () => {
     if (!screenToRemove) return;
 
     setScreens(prevScreens => prevScreens.filter(screen => screen.id !== screenId));
+    if (selectedScreen?.id === screenId) {
+      setSelectedScreen(null);
+    }
     toast.success(`${screenToRemove.name} removida com sucesso!`);
   };
 
@@ -160,25 +216,34 @@ const Index = () => {
       <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 bg-white rounded-lg shadow-sm p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">Telas Ativas</h2>
-            <Button 
-              onClick={addNewScreen}
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-            >
-              <Plus className="w-4 h-4" />
-              Nova Tela
-            </Button>
+        <div className="lg:col-span-4 space-y-4">
+          <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-xl font-semibold">Telas Ativas</h2>
+              <Button 
+                onClick={addNewScreen}
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Nova Tela
+              </Button>
+            </div>
+            <ScreenGrid 
+              screens={screens} 
+              onScreenSelect={handleScreenSelect} 
+              onDrop={handleMediaDrop}
+              onRemoveScreen={handleRemoveScreen}
+            />
           </div>
-          <ScreenGrid 
-            screens={screens} 
-            onScreenSelect={() => {}} 
-            onDrop={handleMediaDrop}
-            onRemoveScreen={handleRemoveScreen}
-          />
+          
+          <div className="bg-white rounded-lg shadow-sm">
+            <ScreenControls 
+              selectedScreen={selectedScreen}
+              onUpdateScreen={handleUpdateScreen}
+            />
+          </div>
         </div>
 
         <div className="lg:col-span-5 bg-white rounded-lg shadow-sm p-4">
