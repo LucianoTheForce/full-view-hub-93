@@ -32,7 +32,7 @@ const Index = () => {
     const savedScreens = localStorage.getItem('screens');
     return savedScreens ? JSON.parse(savedScreens) : [
       { id: "screen1", name: "Tela 1", isActive: true },
-      { id: "screen2", name: "Tela 2", isActive: false },
+      { id: "screen2", name: "Tela 2", isActive: true },
       { id: "screen3", name: "Tela 3", isActive: true },
     ];
   });
@@ -63,14 +63,10 @@ const Index = () => {
           .from("media")
           .getPublicUrl(item.file_path);
 
-        const validatedType = item.type === "video" || item.type === "image" 
-          ? item.type as "video" | "image"
-          : "image";
-
         return {
           id: item.id,
           title: item.title,
-          type: validatedType,
+          type: item.type as "video" | "image",
           file_path: item.file_path,
           url: publicUrl.publicUrl,
         };
@@ -81,13 +77,15 @@ const Index = () => {
   };
 
   const handleMediaDrop = async (mediaItem: MediaItem, screenId: string) => {
+    console.log('Handling media drop for screen:', screenId, mediaItem);
+    
     const newContent = {
       type: mediaItem.type,
       title: mediaItem.title,
       url: mediaItem.url,
     };
 
-    // Update local state
+    // Update local state first
     setScreens(currentScreens =>
       currentScreens.map(screen =>
         screen.id === screenId
@@ -97,10 +95,12 @@ const Index = () => {
     );
 
     try {
-      // Broadcast update to specific screen channel
+      // Create and subscribe to the channel
       const channel = supabase.channel(`screen_${screenId}`);
-      await channel.subscribe();
+      const subscriptionStatus = await channel.subscribe();
+      console.log(`Channel subscription status for ${screenId}:`, subscriptionStatus);
       
+      // Send the broadcast
       const response = await channel.send({
         type: 'broadcast',
         event: 'content_update',
@@ -118,8 +118,8 @@ const Index = () => {
         toast.error('Erro ao atualizar o conteúdo. Tente novamente.');
       }
 
-      // Unsubscribe after sending the message
-      channel.unsubscribe();
+      // Clean up the channel
+      await channel.unsubscribe();
     } catch (error) {
       console.error('Error broadcasting update:', error);
       toast.error('Erro ao atualizar o conteúdo. Tente novamente.');
@@ -133,7 +133,7 @@ const Index = () => {
   const addNewScreen = () => {
     const newScreenNumber = screens.length + 1;
     const newScreen: Screen = {
-      id: `screen${Date.now()}`,
+      id: `screen${newScreenNumber}`,
       name: `Tela ${newScreenNumber}`,
       isActive: true,
     };

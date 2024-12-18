@@ -15,26 +15,34 @@ const Display = () => {
 
   useEffect(() => {
     const loadScreenContent = async () => {
-      // Initial content load
-      const screens = JSON.parse(localStorage.getItem('screens') || '[]');
-      const currentScreen = screens.find((s: any) => s.id === screenId);
-      if (currentScreen?.currentContent) {
-        setContent(currentScreen.currentContent);
+      try {
+        // Initial content load
+        const screens = JSON.parse(localStorage.getItem('screens') || '[]');
+        const currentScreen = screens.find((s: any) => s.id === screenId);
+        console.log('Loading initial content for screen:', screenId, currentScreen);
+        if (currentScreen?.currentContent) {
+          setContent(currentScreen.currentContent);
+        }
+
+        // Subscribe to screen updates
+        const channel = supabase.channel(`screen_${screenId}`)
+          .on('broadcast', { event: 'content_update' }, (payload) => {
+            console.log('Received broadcast update:', payload);
+            if (payload.payload?.content) {
+              setContent(payload.payload.content);
+            }
+          })
+          .subscribe((status) => {
+            console.log(`Subscription status for screen ${screenId}:`, status);
+          });
+
+        return () => {
+          console.log(`Unsubscribing from screen ${screenId}`);
+          channel.unsubscribe();
+        };
+      } catch (error) {
+        console.error('Error in loadScreenContent:', error);
       }
-
-      // Subscribe to screen updates with a more specific channel name
-      const channel = supabase.channel(`screen_${screenId}`)
-        .on('broadcast', { event: 'content_update' }, (payload) => {
-          console.log('Received update:', payload);
-          if (payload.payload && payload.payload.content) {
-            setContent(payload.payload.content);
-          }
-        })
-        .subscribe();
-
-      return () => {
-        channel.unsubscribe();
-      };
     };
 
     loadScreenContent();
