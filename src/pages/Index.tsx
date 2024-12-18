@@ -85,7 +85,6 @@ const Index = () => {
       url: mediaItem.url,
     };
 
-    // Update local state first
     setScreens(currentScreens =>
       currentScreens.map(screen =>
         screen.id === screenId
@@ -100,7 +99,6 @@ const Index = () => {
       const subscriptionStatus = await channel.subscribe();
       console.log(`Channel subscription status for ${screenId}:`, subscriptionStatus);
       
-      // Send the broadcast
       const response = await channel.send({
         type: 'broadcast',
         event: 'content_update',
@@ -118,7 +116,6 @@ const Index = () => {
         toast.error('Erro ao atualizar o conteúdo. Tente novamente.');
       }
 
-      // Clean up the channel
       await channel.unsubscribe();
     } catch (error) {
       console.error('Error broadcasting update:', error);
@@ -134,7 +131,6 @@ const Index = () => {
     const newScreenNumber = screens.length + 1;
     const newScreenId = `screen${newScreenNumber}`;
     
-    // Verify if the screen ID already exists
     const screenExists = screens.some(screen => screen.id === newScreenId);
     if (screenExists) {
       toast.error('Esta tela já existe. Tente novamente.');
@@ -149,6 +145,14 @@ const Index = () => {
     
     setScreens(prevScreens => [...prevScreens, newScreen]);
     toast.success(`Tela ${newScreenNumber} adicionada com sucesso!`);
+  };
+
+  const handleRemoveScreen = (screenId: string) => {
+    const screenToRemove = screens.find(screen => screen.id === screenId);
+    if (!screenToRemove) return;
+
+    setScreens(prevScreens => prevScreens.filter(screen => screen.id !== screenId));
+    toast.success(`${screenToRemove.name} removida com sucesso!`);
   };
 
   return (
@@ -173,6 +177,7 @@ const Index = () => {
             screens={screens} 
             onScreenSelect={() => {}} 
             onDrop={handleMediaDrop}
+            onRemoveScreen={handleRemoveScreen}
           />
         </div>
 

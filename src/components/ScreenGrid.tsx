@@ -1,7 +1,8 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Monitor, Play, Link as LinkIcon } from "lucide-react";
+import { Monitor, Play, Link as LinkIcon, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Button } from "@/components/ui/button";
 
 interface Screen {
   id: string;
@@ -18,9 +19,15 @@ interface ScreenGridProps {
   screens: Screen[];
   onScreenSelect: (screen: Screen) => void;
   onDrop: (mediaItem: any, screenId: string) => void;
+  onRemoveScreen: (screenId: string) => void;
 }
 
-export const ScreenGrid: React.FC<ScreenGridProps> = ({ screens, onScreenSelect, onDrop }) => {
+export const ScreenGrid: React.FC<ScreenGridProps> = ({ 
+  screens, 
+  onScreenSelect, 
+  onDrop,
+  onRemoveScreen 
+}) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
   };
@@ -43,6 +50,17 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({ screens, onScreenSelect,
           onDragOver={handleDragOver}
           onDrop={(e) => handleDrop(e, screen.id)}
         >
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute top-2 right-2 z-10 text-destructive hover:text-destructive hover:bg-destructive/10"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemoveScreen(screen.id);
+            }}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
           <div className="absolute top-2 left-2 w-6 h-6 bg-media-active text-white rounded-full flex items-center justify-center font-bold">
             {index + 1}
           </div>
