@@ -26,16 +26,24 @@ interface Screen {
 
 const Index = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
-  const [screens, setScreens] = useState<Screen[]>([
-    { id: "screen1", name: "Tela 1", isActive: true },
-    { id: "screen2", name: "Tela 2", isActive: false },
-    { id: "screen3", name: "Tela 3", isActive: true },
-  ]);
+  const [screens, setScreens] = useState<Screen[]>(() => {
+    const savedScreens = localStorage.getItem('screens');
+    return savedScreens ? JSON.parse(savedScreens) : [
+      { id: "screen1", name: "Tela 1", isActive: true },
+      { id: "screen2", name: "Tela 2", isActive: false },
+      { id: "screen3", name: "Tela 3", isActive: true },
+    ];
+  });
 
   useEffect(() => {
     loadMediaItems();
     subscribeToScreenUpdates();
   }, []);
+
+  // Save screens to localStorage whenever they change
+  useEffect(() => {
+    localStorage.setItem('screens', JSON.stringify(screens));
+  }, [screens]);
 
   const subscribeToScreenUpdates = () => {
     const channel = supabase.channel('screens')
@@ -92,17 +100,16 @@ const Index = () => {
   };
 
   const handleMediaDrop = async (mediaItem: MediaItem, screenId: string) => {
+    const newContent = {
+      type: mediaItem.type,
+      title: mediaItem.title,
+      url: mediaItem.url,
+    };
+
     setScreens(currentScreens =>
       currentScreens.map(screen =>
         screen.id === screenId
-          ? {
-              ...screen,
-              currentContent: {
-                type: mediaItem.type,
-                title: mediaItem.title,
-                url: mediaItem.url,
-              },
-            }
+          ? { ...screen, currentContent: newContent }
           : screen
       )
     );
@@ -112,11 +119,7 @@ const Index = () => {
       event: 'screen_update',
       payload: {
         screenId,
-        content: {
-          type: mediaItem.type,
-          title: mediaItem.title,
-          url: mediaItem.url,
-        },
+        content: newContent,
       },
     });
 

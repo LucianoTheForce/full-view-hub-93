@@ -15,18 +15,28 @@ const Display = () => {
 
   useEffect(() => {
     const loadScreenContent = async () => {
-      // Aqui você pode implementar a lógica para carregar o conteúdo atual da tela do Supabase
-      // Por enquanto, vamos usar um conteúdo de exemplo
-      setContent({
-        type: "image",
-        url: "https://images.unsplash.com/photo-1486312338219-ce68d2c6f44d",
-        title: "Conteúdo de exemplo"
-      });
+      // Subscribe to screen updates
+      const channel = supabase.channel('screens')
+        .on('broadcast', { event: 'screen_update' }, ({ payload }) => {
+          if (payload.screenId === screenId) {
+            setContent(payload.content);
+          }
+        })
+        .subscribe();
+
+      // Initial content load
+      const screens = JSON.parse(localStorage.getItem('screens') || '[]');
+      const currentScreen = screens.find((s: any) => s.id === screenId);
+      if (currentScreen?.currentContent) {
+        setContent(currentScreen.currentContent);
+      }
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
 
     loadScreenContent();
-
-    // Atualiza o título da janela
     document.title = `Tela ${screenId}`;
   }, [screenId]);
 
