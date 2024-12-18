@@ -39,30 +39,11 @@ const Index = () => {
 
   useEffect(() => {
     loadMediaItems();
-    subscribeToScreenUpdates();
   }, []);
 
   useEffect(() => {
     localStorage.setItem('screens', JSON.stringify(screens));
   }, [screens]);
-
-  const subscribeToScreenUpdates = () => {
-    const channel = supabase.channel('screens')
-      .on('broadcast', { event: 'screen_update' }, ({ payload }) => {
-        setScreens(currentScreens => 
-          currentScreens.map(screen => 
-            screen.id === payload.screenId 
-              ? { ...screen, currentContent: payload.content }
-              : screen
-          )
-        );
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  };
 
   const loadMediaItems = async () => {
     const { data, error } = await supabase
@@ -106,6 +87,7 @@ const Index = () => {
       url: mediaItem.url,
     };
 
+    // Update local state
     setScreens(currentScreens =>
       currentScreens.map(screen =>
         screen.id === screenId
@@ -114,9 +96,12 @@ const Index = () => {
       )
     );
 
-    await supabase.channel('screens').send({
+    // Broadcast update to specific screen channel
+    const channel = supabase.channel(`screen_${screenId}`);
+    await channel.subscribe();
+    await channel.send({
       type: 'broadcast',
-      event: 'screen_update',
+      event: 'content_update',
       payload: {
         screenId,
         content: newContent,

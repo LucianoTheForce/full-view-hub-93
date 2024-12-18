@@ -15,15 +15,6 @@ const Display = () => {
 
   useEffect(() => {
     const loadScreenContent = async () => {
-      // Subscribe to screen updates
-      const channel = supabase.channel('screens')
-        .on('broadcast', { event: 'screen_update' }, ({ payload }) => {
-          if (payload.screenId === screenId) {
-            setContent(payload.content);
-          }
-        })
-        .subscribe();
-
       // Initial content load
       const screens = JSON.parse(localStorage.getItem('screens') || '[]');
       const currentScreen = screens.find((s: any) => s.id === screenId);
@@ -31,8 +22,16 @@ const Display = () => {
         setContent(currentScreen.currentContent);
       }
 
+      // Subscribe to screen updates with a more specific channel name
+      const channel = supabase.channel(`screen_${screenId}`)
+        .on('broadcast', { event: 'content_update' }, ({ payload }) => {
+          console.log('Received update:', payload);
+          setContent(payload.content);
+        })
+        .subscribe();
+
       return () => {
-        supabase.removeChannel(channel);
+        channel.unsubscribe();
       };
     };
 
