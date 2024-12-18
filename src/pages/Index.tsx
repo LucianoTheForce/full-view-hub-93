@@ -4,6 +4,8 @@ import { ScreenGrid } from "@/components/ScreenGrid";
 import { FileUpload } from "@/components/FileUpload";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface MediaItem {
   id: string;
@@ -40,7 +42,6 @@ const Index = () => {
     subscribeToScreenUpdates();
   }, []);
 
-  // Save screens to localStorage whenever they change
   useEffect(() => {
     localStorage.setItem('screens', JSON.stringify(screens));
   }, [screens]);
@@ -81,10 +82,9 @@ const Index = () => {
           .from("media")
           .getPublicUrl(item.file_path);
 
-        // Validate and cast the type to either "video" or "image"
         const validatedType = item.type === "video" || item.type === "image" 
           ? item.type as "video" | "image"
-          : "image"; // Default to image if type is invalid
+          : "image";
 
         return {
           id: item.id,
@@ -130,13 +130,36 @@ const Index = () => {
     loadMediaItems();
   };
 
+  const addNewScreen = () => {
+    const newScreenNumber = screens.length + 1;
+    const newScreen: Screen = {
+      id: `screen${Date.now()}`,
+      name: `Tela ${newScreenNumber}`,
+      isActive: true,
+    };
+    
+    setScreens([...screens, newScreen]);
+    toast.success(`Tela ${newScreenNumber} adicionada com sucesso!`);
+  };
+
   return (
     <div className="container mx-auto py-6">
       <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 bg-white rounded-lg shadow-sm p-4">
-          <h2 className="text-xl font-semibold mb-4">Telas Ativas</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">Telas Ativas</h2>
+            <Button 
+              onClick={addNewScreen}
+              variant="outline"
+              size="sm"
+              className="flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" />
+              Nova Tela
+            </Button>
+          </div>
           <ScreenGrid 
             screens={screens} 
             onScreenSelect={() => {}} 
