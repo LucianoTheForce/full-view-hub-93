@@ -52,12 +52,10 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({ screens, onScreenSelect,
                 <div className="relative w-full aspect-video">
                   {screen.currentContent.type === "video" ? (
                     <>
-                      <video
-                        src={screen.currentContent.url}
+                      <img
+                        src={`${screen.currentContent.url}#t=0.1`}
+                        alt={screen.currentContent.title}
                         className="w-full h-full object-cover rounded"
-                        muted
-                        playsInline
-                        poster={`${screen.currentContent.url}#t=0.1`}
                       />
                       <Play className="absolute top-2 right-2 w-6 h-6 text-white bg-black/50 rounded-full p-1" />
                     </>
