@@ -95,8 +95,10 @@ const Index = () => {
     );
 
     try {
-      // Create and subscribe to the channel
-      const channel = supabase.channel(`screen_${screenId}`);
+      // Create and subscribe to the channel with a unique identifier
+      const channelId = `screen_${screenId}_${Date.now()}`;
+      const channel = supabase.channel(channelId);
+      
       const subscriptionStatus = await channel.subscribe();
       console.log(`Channel subscription status for ${screenId}:`, subscriptionStatus);
       
@@ -132,13 +134,22 @@ const Index = () => {
 
   const addNewScreen = () => {
     const newScreenNumber = screens.length + 1;
+    const newScreenId = `screen${newScreenNumber}`;
+    
+    // Verify if the screen ID already exists
+    const screenExists = screens.some(screen => screen.id === newScreenId);
+    if (screenExists) {
+      toast.error('Esta tela já existe. Tente novamente.');
+      return;
+    }
+    
     const newScreen: Screen = {
-      id: `screen${newScreenNumber}`,
+      id: newScreenId,
       name: `Tela ${newScreenNumber}`,
       isActive: true,
     };
     
-    setScreens([...screens, newScreen]);
+    setScreens(prevScreens => [...prevScreens, newScreen]);
     toast.success(`Tela ${newScreenNumber} adicionada com sucesso!`);
   };
 
