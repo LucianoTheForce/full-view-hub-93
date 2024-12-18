@@ -96,19 +96,34 @@ const Index = () => {
       )
     );
 
-    // Broadcast update to specific screen channel
-    const channel = supabase.channel(`screen_${screenId}`);
-    await channel.subscribe();
-    await channel.send({
-      type: 'broadcast',
-      event: 'content_update',
-      payload: {
-        screenId,
-        content: newContent,
-      },
-    });
+    try {
+      // Broadcast update to specific screen channel
+      const channel = supabase.channel(`screen_${screenId}`);
+      await channel.subscribe();
+      
+      const response = await channel.send({
+        type: 'broadcast',
+        event: 'content_update',
+        payload: {
+          screenId,
+          content: newContent,
+        },
+      });
 
-    toast.success(`Conteúdo atualizado na ${screens.find(s => s.id === screenId)?.name}`);
+      console.log('Broadcast response:', response);
+      
+      if (response === 'ok') {
+        toast.success(`Conteúdo atualizado na ${screens.find(s => s.id === screenId)?.name}`);
+      } else {
+        toast.error('Erro ao atualizar o conteúdo. Tente novamente.');
+      }
+
+      // Unsubscribe after sending the message
+      channel.unsubscribe();
+    } catch (error) {
+      console.error('Error broadcasting update:', error);
+      toast.error('Erro ao atualizar o conteúdo. Tente novamente.');
+    }
   };
 
   const handleUploadComplete = () => {

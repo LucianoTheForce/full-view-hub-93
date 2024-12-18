@@ -24,9 +24,11 @@ const Display = () => {
 
       // Subscribe to screen updates with a more specific channel name
       const channel = supabase.channel(`screen_${screenId}`)
-        .on('broadcast', { event: 'content_update' }, ({ payload }) => {
+        .on('broadcast', { event: 'content_update' }, (payload) => {
           console.log('Received update:', payload);
-          setContent(payload.content);
+          if (payload.payload && payload.payload.content) {
+            setContent(payload.payload.content);
+          }
         })
         .subscribe();
 
