@@ -27,7 +27,7 @@ export class RunwareService {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;
   private connectionSessionUUID: string | null = null;
-  private messageCallbacks: Map<string, (data: any[]) => void> = new Map();
+  private messageCallbacks: Map<string, (data: GeneratedImage[]) => void> = new Map();
   private isAuthenticated: boolean = false;
   private connectionPromise: Promise<void> | null = null;
   private receivedImages: Map<string, GeneratedImage[]> = new Map();
