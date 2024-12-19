@@ -39,30 +39,6 @@ export type Database = {
         }
         Relationships: []
       }
-      sessions: {
-        Row: {
-          id: string
-          name: string
-          screens: Json
-          media_items: Json
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          screens: Json
-          media_items: Json
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          screens?: Json
-          media_items?: Json
-          created_at?: string
-        }
-        Relationships: []
-      }
     }
     Views: {
       [_ in never]: never
