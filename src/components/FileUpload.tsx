@@ -3,14 +3,12 @@ import { Upload } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
+
+type MediaItem = Database["public"]["Tables"]["media_items"]["Row"];
 
 interface FileUploadProps {
-  onUploadComplete: (fileInfo: {
-    title: string;
-    type: "video" | "image";
-    file_path: string;
-    file_size: number;
-  }) => void;
+  onUploadComplete: (fileInfo: MediaItem) => void;
 }
 
 export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
@@ -59,25 +57,22 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
 
       if (uploadError) throw uploadError;
 
-      const { error: dbError } = await supabase.from("media_items").insert({
-        title: file.name,
-        type: fileType,
-        file_path: filePath,
-        file_size: file.size,
-      });
+      const { data, error: dbError } = await supabase
+        .from("media_items")
+        .insert({
+          title: file.name,
+          type: fileType as "video" | "image",
+          file_path: filePath,
+          file_size: file.size,
+        })
+        .select()
+        .single();
 
       if (dbError) throw dbError;
 
-      const { data: publicUrl } = supabase.storage
-        .from("media")
-        .getPublicUrl(filePath);
-
-      onUploadComplete({
-        title: file.name,
-        type: fileType,
-        file_path: filePath,
-        file_size: file.size,
-      });
+      if (data) {
+        onUploadComplete(data);
+      }
 
       toast({
         title: "Upload concluído",

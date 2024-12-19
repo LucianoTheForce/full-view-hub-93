@@ -1,14 +1,11 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
-interface MediaItem {
-  id: string;
-  type: "video" | "image";
+type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
   url: string;
-  title: string;
-  file_path: string;
-}
+};
 
 export const useMediaItems = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
@@ -26,7 +23,7 @@ export const useMediaItems = () => {
     }
 
     const itemsWithUrls = await Promise.all(
-      data.map(async (item) => {
+      (data || []).map(async (item) => {
         const { data: publicUrl } = supabase.storage
           .from("media")
           .getPublicUrl(item.file_path);
@@ -34,8 +31,11 @@ export const useMediaItems = () => {
         return {
           id: item.id,
           title: item.title,
-          type: item.type as "video" | "image",
+          type: item.type,
           file_path: item.file_path,
+          file_size: item.file_size,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
           url: publicUrl.publicUrl,
         };
       })
