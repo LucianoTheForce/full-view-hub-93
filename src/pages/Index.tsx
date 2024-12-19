@@ -25,7 +25,7 @@ const Index = () => {
     selectedScreen, 
     handleScreenSelect, 
     handleUpdateScreen, 
-    handleMediaDrop, 
+    handleMediaDrop: onMediaDrop, 
     handleRemoveScreen, 
     addNewScreen, 
     resetScreens 
@@ -63,18 +63,29 @@ const Index = () => {
     toast.success("Nova sessão iniciada!");
   };
 
+  const handleMediaDrop = (mediaItem: MediaItem, screenId: string) => {
+    if (!screenId) return;
+    
+    onMediaDrop({
+      type: mediaItem.type,
+      title: mediaItem.title,
+      url: mediaItem.url
+    }, screenId);
+  };
+
   const handleScreenUpdate = (screenId: string, updates: any) => {
     const screenToUpdate = screens.find(screen => screen.id === screenId);
-    if (screenToUpdate) {
-      const updatedScreen = {
-        ...screenToUpdate,
-        currentContent: screenToUpdate.currentContent ? {
-          ...screenToUpdate.currentContent,
-          ...updates
-        } : undefined
-      };
-      handleUpdateScreen(updatedScreen);
-    }
+    if (!screenToUpdate) return;
+
+    const updatedScreen = {
+      ...screenToUpdate,
+      currentContent: {
+        ...(screenToUpdate.currentContent || {}),
+        ...updates
+      }
+    };
+
+    handleUpdateScreen(updatedScreen);
   };
 
   return (
@@ -101,7 +112,7 @@ const Index = () => {
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           <div className="lg:col-span-3 space-y-4">
-            <div className="bg-white rounded-lg shadow-sm p-4">
+            <div className="bg-white rounded-lg shadow-sm">
               <ScreenControls 
                 selectedScreen={selectedScreen}
                 onUpdateScreen={handleScreenUpdate}
