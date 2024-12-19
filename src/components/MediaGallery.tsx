@@ -21,15 +21,15 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
 
   const getGridColumns = () => {
     if (gridSize <= 2) return "grid-cols-1 sm:grid-cols-2";
-    if (gridSize === 3) return "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
-    if (gridSize === 4) return "grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4";
-    if (gridSize === 5) return "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5";
-    return "grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6";
+    if (gridSize === 3) return "grid-cols-2 sm:grid-cols-3";
+    if (gridSize === 4) return "grid-cols-2 sm:grid-cols-4";
+    if (gridSize === 5) return "grid-cols-3 sm:grid-cols-5";
+    return "grid-cols-3 sm:grid-cols-6";
   };
 
   return (
-    <div className="flex flex-col gap-4 p-4 h-[calc(100vh-180px)]">
-      <div className="flex items-center gap-4 px-2 bg-white/50 backdrop-blur-sm p-3 rounded-lg shadow-sm">
+    <div className="h-full flex flex-col">
+      <div className="flex items-center gap-4 px-4 py-3 border-b">
         <span className="text-sm text-muted-foreground whitespace-nowrap">Tamanho do Grid:</span>
         <Slider
           value={[gridSize]}
@@ -42,11 +42,11 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
         <span className="text-sm text-muted-foreground">{gridSize} colunas</span>
       </div>
       
-      <div className={`grid ${getGridColumns()} gap-4 overflow-y-auto flex-grow p-2`}>
+      <div className={`grid ${getGridColumns()} gap-4 p-4 overflow-y-auto flex-1`}>
         {items.map((item) => (
           <Card
             key={item.id}
-            className="group relative overflow-hidden cursor-move hover:ring-2 hover:ring-media-hover transition-all duration-200 aspect-square min-h-[240px]"
+            className="group relative overflow-hidden cursor-move hover:ring-2 hover:ring-media-hover transition-all duration-200 aspect-square"
             onClick={() => onSelect(item)}
             draggable
             onDragStart={(e) => handleDragStart(e, item)}

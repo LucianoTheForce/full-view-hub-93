@@ -35,53 +35,65 @@ const Index = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
-      <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-4 space-y-4">
-          <RunwareImageGenerator 
-            onImageGenerated={handleImageGenerated} 
-            onImageSaved={loadMediaItems}
-          />
-          <ImageSlider images={generatedImages} onSelect={handleGeneratedImageSelect} />
-          <ScreenControls 
-            selectedScreen={selectedScreen}
-            onUpdateScreen={handleUpdateScreen}
-          />
-        </div>
-
-        <div className="lg:col-span-5">
-          <div className="bg-white rounded-lg shadow-sm p-4">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Telas Ativas</h2>
-              <Button 
-                onClick={addNewScreen}
-                variant="outline"
-                size="sm"
-                className="flex items-center gap-2"
-              >
-                <Plus className="w-4 h-4" />
-                Nova Tela
-              </Button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto py-6 px-4">
+        <h1 className="text-3xl font-bold mb-6">Central de Controle</h1>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Coluna da Esquerda - Controles e Geração de Imagens */}
+          <div className="lg:col-span-3 space-y-4">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <ScreenControls 
+                selectedScreen={selectedScreen}
+                onUpdateScreen={handleUpdateScreen}
+              />
             </div>
-            <ScreenGrid 
-              screens={screens} 
-              onScreenSelect={handleScreenSelect} 
-              onDrop={handleMediaDrop}
-              onRemoveScreen={handleRemoveScreen}
-            />
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <RunwareImageGenerator 
+                onImageGenerated={handleImageGenerated} 
+                onImageSaved={loadMediaItems}
+              />
+              <ImageSlider images={generatedImages} onSelect={handleGeneratedImageSelect} />
+            </div>
           </div>
-        </div>
 
-        <div className="lg:col-span-3 space-y-4">
-          <div className="bg-white rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold p-4">Galeria de Mídia</h2>
-            <MediaGallery items={mediaItems} onSelect={(item) => handleMediaDrop(item, selectedScreen?.id || '')} />
+          {/* Coluna Central - Telas */}
+          <div className="lg:col-span-4">
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-semibold">Telas Ativas</h2>
+                <Button 
+                  onClick={addNewScreen}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="w-4 h-4" />
+                  Nova Tela
+                </Button>
+              </div>
+              <ScreenGrid 
+                screens={screens} 
+                onScreenSelect={handleScreenSelect} 
+                onDrop={handleMediaDrop}
+                onRemoveScreen={handleRemoveScreen}
+              />
+            </div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm">
-            <h2 className="text-xl font-semibold p-4">Upload</h2>
-            <FileUpload onUploadComplete={loadMediaItems} />
+
+          {/* Coluna da Direita - Galeria e Upload */}
+          <div className="lg:col-span-5 space-y-4">
+            <div className="bg-white rounded-lg shadow-sm h-[calc(100vh-200px)]">
+              <h2 className="text-xl font-semibold p-4 border-b">Galeria de Mídia</h2>
+              <MediaGallery 
+                items={mediaItems} 
+                onSelect={(item) => handleMediaDrop(item, selectedScreen?.id || '')} 
+              />
+            </div>
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <h2 className="text-xl font-semibold mb-4">Upload</h2>
+              <FileUpload onUploadComplete={loadMediaItems} />
+            </div>
           </div>
         </div>
       </div>
