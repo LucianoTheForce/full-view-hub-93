@@ -37,7 +37,7 @@ export const useScreens = () => {
               ...screen.currentContent,
               ...updates
             } : {
-              type: "image",
+              type: "image" as const,
               title: "",
               url: "",
               rotation: 0,
@@ -62,7 +62,7 @@ export const useScreens = () => {
             ...prev.currentContent,
             ...updates
           } : {
-            type: "image",
+            type: "image" as const,
             title: "",
             url: "",
             rotation: 0,
@@ -77,6 +77,7 @@ export const useScreens = () => {
     // Broadcast the update to the display page
     const channel = supabase.channel(`screen_${screenId}`);
     channel.subscribe().send({
+      type: "broadcast",
       event: 'content_update',
       payload: {
         screenId,
@@ -118,6 +119,7 @@ export const useScreens = () => {
     // Broadcast the update to the display page
     const channel = supabase.channel(`screen_${screenId}`);
     channel.subscribe().send({
+      type: "broadcast",
       event: 'content_update',
       payload: {
         screenId,
