@@ -139,11 +139,11 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
             <div className="flex items-center justify-center gap-2 mt-2 text-xs text-media-active">
               <LinkIcon className="w-4 h-4" />
               <Link 
-                to={`/display/${screen.id}`}
+                to={`/s/${screen.id}`}
                 className="hover:underline"
                 onClick={(e) => e.stopPropagation()}
               >
-                Ver tela {index + 1}
+                Tela {index + 1}
               </Link>
             </div>
           </div>
