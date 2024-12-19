@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { RunwareService, GenerateImageParams } from "@/services/runware";
+import { supabase } from "@/integrations/supabase/client";
 
 interface RunwareImageGeneratorProps {
   onImageGenerated: (imageUrl: string) => void;
@@ -25,8 +26,13 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
     setIsGenerating(true);
 
     try {
-      // Você precisará substituir esta chave API pela sua própria
-      const runwareService = new RunwareService("YOUR_API_KEY");
+      const { data: { RUNWARE_API_KEY }, error } = await supabase.functions.invoke('get-runware-key');
+      
+      if (error || !RUNWARE_API_KEY) {
+        throw new Error("Não foi possível obter a chave da API do Runware");
+      }
+
+      const runwareService = new RunwareService(RUNWARE_API_KEY);
       
       const params: GenerateImageParams = {
         positivePrompt: prompt,
