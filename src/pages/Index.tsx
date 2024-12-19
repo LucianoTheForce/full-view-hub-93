@@ -26,21 +26,11 @@ const Index = () => {
 
   const handleGeneratedImageSelect = (imageUrl: string) => {
     if (selectedScreen) {
-      handleUpdateScreen(selectedScreen.id, {
+      handleMediaDrop({
         type: "image",
-        title: "Imagem Gerada",
-        url: imageUrl,
-      });
-    }
-  };
-
-  const handleMediaSelect = (item: MediaItem) => {
-    if (selectedScreen) {
-      handleUpdateScreen(selectedScreen.id, {
-        type: item.type as "video" | "image",
-        title: item.title,
-        url: item.url,
-      });
+        title: "Imagem Gerada por IA",
+        url: imageUrl
+      }, selectedScreen.id);
     }
   };
 

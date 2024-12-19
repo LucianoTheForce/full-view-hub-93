@@ -1,12 +1,7 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface ImageSliderProps {
   images: string[];
@@ -14,42 +9,62 @@ interface ImageSliderProps {
 }
 
 export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) => {
-  if (!images.length) {
-    return (
-      <Card className="p-4">
-        <p className="text-center text-muted-foreground">
-          Nenhuma imagem gerada ainda
-        </p>
-      </Card>
-    );
-  }
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+
+  if (images.length === 0) return null;
+
+  const handlePrevious = () => {
+    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+  };
+
+  const handleNext = () => {
+    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+  };
+
+  const handleDragStart = (e: React.DragEvent, imageUrl: string) => {
+    e.dataTransfer.setData("application/json", JSON.stringify({
+      type: "image",
+      title: "Imagem Gerada por IA",
+      url: imageUrl
+    }));
+  };
 
   return (
-    <Card className="p-4">
-      <h3 className="text-lg font-semibold mb-4">Imagens Geradas</h3>
-      <Carousel className="w-full">
-        <CarouselContent>
-          {images.map((imageUrl, index) => (
-            <CarouselItem key={index} className="basis-1/2 md:basis-1/3">
-              <div
-                className="aspect-square relative cursor-pointer group"
-                onClick={() => onSelect(imageUrl)}
-              >
-                <img
-                  src={imageUrl}
-                  alt={`Imagem gerada ${index + 1}`}
-                  className="w-full h-full object-cover rounded-lg"
-                />
-                <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                  <p className="text-white text-sm">Clique para usar</p>
-                </div>
-              </div>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious />
-        <CarouselNext />
-      </Carousel>
+    <Card className="p-4 space-y-4">
+      <h3 className="text-lg font-semibold">Imagens Geradas</h3>
+      <div className="relative aspect-video">
+        <img
+          src={images[currentIndex]}
+          alt={`Imagem gerada ${currentIndex + 1}`}
+          className="w-full h-full object-contain cursor-move"
+          draggable
+          onDragStart={(e) => handleDragStart(e, images[currentIndex])}
+          onClick={() => onSelect(images[currentIndex])}
+        />
+        {images.length > 1 && (
+          <>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute left-2 top-1/2 -translate-y-1/2"
+              onClick={handlePrevious}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="absolute right-2 top-1/2 -translate-y-1/2"
+              onClick={handleNext}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </>
+        )}
+      </div>
+      <div className="text-center text-sm text-muted-foreground">
+        {currentIndex + 1} de {images.length}
+      </div>
     </Card>
   );
 };
