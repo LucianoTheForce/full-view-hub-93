@@ -2,8 +2,9 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { RotateCw, Maximize2, Palette } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { RotateCw, RotateCcw, Maximize2, Palette } from "lucide-react";
 
 interface ScreenControlsProps {
   selectedScreen: {
@@ -42,24 +43,54 @@ export const ScreenControls: React.FC<ScreenControlsProps> = ({
     });
   };
 
+  const handleQuickRotate = (degrees: number) => {
+    const currentRotation = selectedScreen.currentContent?.rotation || 0;
+    const newRotation = (currentRotation + degrees) % 360;
+    onUpdateScreen(selectedScreen.id, {
+      rotation: newRotation,
+    });
+  };
+
   const handleScaleChange = (value: number[]) => {
     onUpdateScreen(selectedScreen.id, {
       scale: value[0],
     });
   };
 
-  const handleBackgroundChange = (value: string) => {
+  const handleColorChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     onUpdateScreen(selectedScreen.id, {
-      backgroundColor: value,
+      backgroundColor: event.target.value,
     });
   };
+
+  const scalePercentage = Math.round(((selectedScreen.currentContent?.scale || 1) - 0.5) * 200);
 
   return (
     <Card className="p-4 space-y-6">
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <RotateCw className="w-4 h-4" />
-          <Label>Rotação</Label>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <RotateCw className="w-4 h-4" />
+            <Label>Rotação</Label>
+          </div>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleQuickRotate(-90)}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => handleQuickRotate(90)}
+            >
+              <RotateCw className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
         <Slider
           defaultValue={[selectedScreen.currentContent?.rotation || 0]}
@@ -67,12 +98,18 @@ export const ScreenControls: React.FC<ScreenControlsProps> = ({
           step={1}
           onValueChange={handleRotationChange}
         />
+        <div className="text-right text-sm text-muted-foreground">
+          {selectedScreen.currentContent?.rotation || 0}°
+        </div>
       </div>
 
       <div className="space-y-2">
-        <div className="flex items-center gap-2">
-          <Maximize2 className="w-4 h-4" />
-          <Label>Tamanho</Label>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Maximize2 className="w-4 h-4" />
+            <Label>Tamanho</Label>
+          </div>
+          <span className="text-sm text-muted-foreground">{scalePercentage}%</span>
         </div>
         <Slider
           defaultValue={[selectedScreen.currentContent?.scale || 1]}
@@ -88,24 +125,21 @@ export const ScreenControls: React.FC<ScreenControlsProps> = ({
           <Palette className="w-4 h-4" />
           <Label>Cor de Fundo</Label>
         </div>
-        <RadioGroup
-          defaultValue={selectedScreen.currentContent?.backgroundColor || "black"}
-          onValueChange={handleBackgroundChange}
-          className="grid grid-cols-3 gap-2"
-        >
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="black" id="black" />
-            <Label htmlFor="black">Preto</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="#1A1F2C" id="dark" />
-            <Label htmlFor="dark">Escuro</Label>
-          </div>
-          <div className="flex items-center space-x-2">
-            <RadioGroupItem value="#8E9196" id="gray" />
-            <Label htmlFor="gray">Cinza</Label>
-          </div>
-        </RadioGroup>
+        <div className="flex gap-2">
+          <Input
+            type="color"
+            value={selectedScreen.currentContent?.backgroundColor || "#000000"}
+            onChange={handleColorChange}
+            className="w-12 h-10 p-1 cursor-pointer"
+          />
+          <Input
+            type="text"
+            value={selectedScreen.currentContent?.backgroundColor || "#000000"}
+            onChange={handleColorChange}
+            className="flex-1"
+            placeholder="Digite um código de cor (ex: #000000)"
+          />
+        </div>
       </div>
     </Card>
   );
