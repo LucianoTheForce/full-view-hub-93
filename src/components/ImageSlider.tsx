@@ -28,6 +28,11 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) =>
       url: imageUrl
     };
     e.dataTransfer.setData("application/json", JSON.stringify(mediaItem));
+    
+    // Create a drag preview image
+    const img = new Image();
+    img.src = imageUrl;
+    e.dataTransfer.setDragImage(img, 10, 10);
   };
 
   const handleImageClick = (imageUrl: string) => {
@@ -48,10 +53,10 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) =>
         <Carousel className="w-full">
           <CarouselContent>
             {images.map((imageUrl, index) => (
-              <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
+              <CarouselItem key={index} className="md:basis-1/2">
                 <div 
-                  className="relative aspect-video group cursor-move"
-                  draggable="true"
+                  className="relative aspect-[4/3] group cursor-move"
+                  draggable
                   onDragStart={(e) => handleDragStart(e, imageUrl)}
                 >
                   <img
@@ -62,7 +67,7 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) =>
                   />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                     <span className="bg-black/50 text-white px-2 py-1 rounded text-sm">
-                      Arraste ou clique para ampliar
+                      Arraste para uma tela ou clique para ampliar
                     </span>
                   </div>
                 </div>
