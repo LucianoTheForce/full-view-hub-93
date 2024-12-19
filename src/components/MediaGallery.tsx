@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
 import type { Database } from "@/integrations/supabase/types";
@@ -14,9 +14,25 @@ interface MediaGalleryProps {
 
 export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) => {
   const [gridSize, setGridSize] = useState(4);
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
 
   const handleDragStart = (e: React.DragEvent, item: MediaItem) => {
     e.dataTransfer.setData("application/json", JSON.stringify(item));
+  };
+
+  const handleMouseEnter = (itemId: string) => {
+    if (videoRefs.current[itemId]) {
+      videoRefs.current[itemId].play().catch(() => {
+        // Silently handle autoplay errors
+      });
+    }
+  };
+
+  const handleMouseLeave = (itemId: string) => {
+    if (videoRefs.current[itemId]) {
+      videoRefs.current[itemId].pause();
+      videoRefs.current[itemId].currentTime = 0;
+    }
   };
 
   const getGridColumns = () => {
@@ -50,12 +66,27 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
             onClick={() => onSelect(item)}
             draggable
             onDragStart={(e) => handleDragStart(e, item)}
+            onMouseEnter={() => handleMouseEnter(item.id)}
+            onMouseLeave={() => handleMouseLeave(item.id)}
           >
-            <img
-              src={item.type === "video" ? `${item.url}#t=0.1` : item.url}
-              alt={item.title}
-              className="w-full h-full object-cover"
-            />
+            {item.type === "video" ? (
+              <video
+                ref={(el) => {
+                  if (el) videoRefs.current[item.id] = el;
+                }}
+                src={item.url}
+                className="w-full h-full object-cover"
+                muted
+                loop
+                playsInline
+              />
+            ) : (
+              <img
+                src={item.url}
+                alt={item.title}
+                className="w-full h-full object-cover"
+              />
+            )}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-all duration-200">
               <div className="absolute bottom-0 left-0 right-0 p-3 text-white">
                 <p className="text-sm font-medium truncate">{item.title}</p>
