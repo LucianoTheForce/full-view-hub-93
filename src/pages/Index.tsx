@@ -9,6 +9,11 @@ import { useScreens } from "@/hooks/useScreens";
 import { useMediaItems } from "@/hooks/useMediaItems";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
+  url: string;
+};
 
 const Index = () => {
   const { screens, selectedScreen, handleScreenSelect, handleUpdateScreen, handleMediaDrop, handleRemoveScreen, addNewScreen } = useScreens();
@@ -25,6 +30,16 @@ const Index = () => {
         type: "image",
         title: "Imagem Gerada",
         url: imageUrl,
+      });
+    }
+  };
+
+  const handleMediaSelect = (item: MediaItem) => {
+    if (selectedScreen) {
+      handleUpdateScreen(selectedScreen.id, {
+        type: item.type as "video" | "image",
+        title: item.title,
+        url: item.url,
       });
     }
   };
@@ -69,7 +84,7 @@ const Index = () => {
         <div className="lg:col-span-3 space-y-4">
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4">Galeria de Mídia</h2>
-            <MediaGallery items={mediaItems} onSelect={() => {}} />
+            <MediaGallery items={mediaItems} onSelect={handleMediaSelect} />
           </div>
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4">Upload</h2>

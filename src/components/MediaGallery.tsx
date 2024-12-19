@@ -1,13 +1,11 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
 import { Play, Image as ImageIcon } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
 
-interface MediaItem {
-  id: string;
-  type: "video" | "image";
+type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
   url: string;
-  title: string;
-}
+};
 
 interface MediaGalleryProps {
   items: MediaItem[];

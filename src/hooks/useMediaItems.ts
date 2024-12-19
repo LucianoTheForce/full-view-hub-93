@@ -29,13 +29,7 @@ export const useMediaItems = () => {
           .getPublicUrl(item.file_path);
 
         return {
-          id: item.id,
-          title: item.title,
-          type: item.type,
-          file_path: item.file_path,
-          file_size: item.file_size,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
+          ...item,
           url: publicUrl.publicUrl,
         };
       })
