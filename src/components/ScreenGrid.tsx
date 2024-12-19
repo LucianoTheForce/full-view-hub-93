@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Monitor, Play, Link as LinkIcon, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -28,6 +28,8 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
   onDrop,
   onRemoveScreen 
 }) => {
+  const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
+
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
     e.currentTarget.classList.add('ring-2', 'ring-media-hover');
@@ -50,6 +52,21 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
     }
   };
 
+  const handleMouseEnter = (screenId: string) => {
+    if (videoRefs.current[screenId]) {
+      videoRefs.current[screenId].play().catch(() => {
+        // Silently handle autoplay errors
+      });
+    }
+  };
+
+  const handleMouseLeave = (screenId: string) => {
+    if (videoRefs.current[screenId]) {
+      videoRefs.current[screenId].pause();
+      videoRefs.current[screenId].currentTime = 0;
+    }
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4">
       {screens.map((screen, index) => (
@@ -62,6 +79,8 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
           onDragOver={handleDragOver}
           onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, screen.id)}
+          onMouseEnter={() => screen.currentContent?.type === "video" && handleMouseEnter(screen.id)}
+          onMouseLeave={() => screen.currentContent?.type === "video" && handleMouseLeave(screen.id)}
         >
           <Button
             variant="ghost"
@@ -84,6 +103,9 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
                   {screen.currentContent.type === "video" ? (
                     <div className="relative w-full h-full">
                       <video
+                        ref={(el) => {
+                          if (el) videoRefs.current[screen.id] = el;
+                        }}
                         src={screen.currentContent.url}
                         className="w-full h-full object-cover rounded"
                         muted
