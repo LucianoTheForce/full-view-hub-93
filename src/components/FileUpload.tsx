@@ -11,6 +11,12 @@ interface FileUploadProps {
   onUploadComplete: (fileInfo: MediaItem) => void;
 }
 
+// Maximum file sizes in bytes (50MB for images, 100MB for videos)
+const MAX_FILE_SIZES = {
+  image: 50 * 1024 * 1024,
+  video: 100 * 1024 * 1024,
+};
+
 export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
   const [progress, setProgress] = useState(0);
   const [isUploading, setIsUploading] = useState(false);
@@ -30,6 +36,17 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
       return;
     }
 
+    // Check file size
+    if (file.size > MAX_FILE_SIZES[fileType]) {
+      const maxSizeMB = MAX_FILE_SIZES[fileType] / (1024 * 1024);
+      toast({
+        title: "Arquivo muito grande",
+        description: `O tamanho máximo permitido para ${fileType === 'image' ? 'imagens' : 'vídeos'} é ${maxSizeMB}MB.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
     setIsUploading(true);
     setProgress(0);
 
@@ -37,7 +54,7 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
       const fileName = `${crypto.randomUUID()}-${file.name}`;
       const filePath = `${fileType}s/${fileName}`;
 
-      // Simulate upload progress since Supabase doesn't provide progress events
+      // Simulate upload progress
       const progressInterval = setInterval(() => {
         setProgress((prev) => {
           if (prev >= 90) {
@@ -82,7 +99,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
       console.error("Erro no upload:", error);
       toast({
         title: "Erro no upload",
-        description: "Não foi possível enviar o arquivo. Tente novamente.",
+        description: error.message === "Payload too large" 
+          ? "O arquivo é muito grande para ser enviado. Por favor, tente um arquivo menor."
+          : "Não foi possível enviar o arquivo. Tente novamente.",
         variant: "destructive",
       });
     } finally {
@@ -108,6 +127,9 @@ export const FileUpload: React.FC<FileUploadProps> = ({ onUploadComplete }) => {
             ) : (
               <span>Clique para enviar um arquivo</span>
             )}
+          </p>
+          <p className="text-xs text-gray-500">
+            Máx: {MAX_FILE_SIZES.image / (1024 * 1024)}MB para imagens, {MAX_FILE_SIZES.video / (1024 * 1024)}MB para vídeos
           </p>
         </div>
         <input
