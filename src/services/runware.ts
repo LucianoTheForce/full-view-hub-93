@@ -6,7 +6,7 @@ export interface GenerateImageParams {
   positivePrompt: string;
   model?: string;
   numberResults?: number;
-  outputFormat?: string;
+  outputFormat?: "WEBP" | "PNG" | "JPEG";
   CFGScale?: number;
   scheduler?: string;
   strength?: number;
