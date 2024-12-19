@@ -13,6 +13,8 @@ interface RunwareModelSettingsProps {
   setOutputFormat: (value: "WEBP" | "PNG" | "JPEG") => void;
   cfgScale: number;
   setCfgScale: (value: number) => void;
+  guidance: number;
+  setGuidance: (value: number) => void;
   scheduler: string;
   setScheduler: (value: string) => void;
   strength: number;
@@ -48,6 +50,8 @@ export const RunwareModelSettings: React.FC<RunwareModelSettingsProps> = ({
   setOutputFormat,
   cfgScale,
   setCfgScale,
+  guidance,
+  setGuidance,
   scheduler,
   setScheduler,
   strength,
@@ -105,6 +109,18 @@ export const RunwareModelSettings: React.FC<RunwareModelSettingsProps> = ({
           max={20}
           step={0.1}
           onValueChange={(value) => setCfgScale(value[0])}
+          disabled={isGenerating}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label>Guidance ({guidance})</Label>
+        <Slider
+          value={[guidance]}
+          min={0}
+          max={20}
+          step={0.1}
+          onValueChange={(value) => setGuidance(value[0])}
           disabled={isGenerating}
         />
       </div>

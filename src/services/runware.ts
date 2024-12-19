@@ -8,6 +8,7 @@ export interface GenerateImageParams {
   numberResults?: number;
   outputFormat?: string;
   CFGScale?: number;
+  guidance?: number;
   scheduler?: string;
   strength?: number;
   promptWeighting?: "compel" | "sdEmbeds";
@@ -153,6 +154,7 @@ export class RunwareService {
         outputFormat: params.outputFormat || "WEBP",
         steps: 4,
         CFGScale: params.CFGScale || 1,
+        guidance: params.guidance || 3.5,
         scheduler: params.scheduler || "FlowMatchEulerDiscreteScheduler",
         strength: params.strength || 0.8,
         lora: params.lora || [],
