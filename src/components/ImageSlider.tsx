@@ -21,22 +21,13 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) =>
   
   if (images.length === 0) return null;
 
-  const handleDragStart = (e: React.DragEvent<HTMLImageElement>, imageUrl: string) => {
-    e.preventDefault();
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, imageUrl: string) => {
     const mediaItem = {
       type: "image",
       title: "Imagem Gerada por IA",
       url: imageUrl
     };
     e.dataTransfer.setData("application/json", JSON.stringify(mediaItem));
-    
-    // Create a drag preview image
-    const img = new Image();
-    img.src = imageUrl;
-    e.dataTransfer.setDragImage(img, 10, 10);
-    
-    // Set effectAllowed to move to indicate this is a move operation
-    e.dataTransfer.effectAllowed = 'move';
   };
 
   const handleImageClick = (imageUrl: string) => {
@@ -58,13 +49,15 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) =>
           <CarouselContent>
             {images.map((imageUrl, index) => (
               <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/3">
-                <div className="relative aspect-video group">
+                <div 
+                  className="relative aspect-video group cursor-move"
+                  draggable="true"
+                  onDragStart={(e) => handleDragStart(e, imageUrl)}
+                >
                   <img
                     src={imageUrl}
                     alt={`Imagem gerada ${index + 1}`}
-                    className="w-full h-full object-cover rounded-lg cursor-move transition-all duration-200 group-hover:brightness-90"
-                    draggable="true"
-                    onDragStart={(e) => handleDragStart(e, imageUrl)}
+                    className="w-full h-full object-cover rounded-lg transition-all duration-200 group-hover:brightness-90"
                     onClick={() => handleImageClick(imageUrl)}
                   />
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
