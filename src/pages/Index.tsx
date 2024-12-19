@@ -40,7 +40,10 @@ const Index = () => {
       
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div className="lg:col-span-4 space-y-4">
-          <RunwareImageGenerator onImageGenerated={handleImageGenerated} />
+          <RunwareImageGenerator 
+            onImageGenerated={handleImageGenerated} 
+            onImageSaved={loadMediaItems}
+          />
           <ImageSlider images={generatedImages} onSelect={handleGeneratedImageSelect} />
           <ScreenControls 
             selectedScreen={selectedScreen}

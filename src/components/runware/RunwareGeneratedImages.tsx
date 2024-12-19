@@ -7,9 +7,13 @@ import type { GeneratedImage } from "@/services/runware";
 
 interface RunwareGeneratedImagesProps {
   images: GeneratedImage[];
+  onImageSaved?: () => void;
 }
 
-export const RunwareGeneratedImages: React.FC<RunwareGeneratedImagesProps> = ({ images }) => {
+export const RunwareGeneratedImages: React.FC<RunwareGeneratedImagesProps> = ({ 
+  images,
+  onImageSaved 
+}) => {
   const handleSaveToGallery = async (image: GeneratedImage) => {
     try {
       // Download the image
@@ -38,6 +42,7 @@ export const RunwareGeneratedImages: React.FC<RunwareGeneratedImagesProps> = ({ 
       if (insertError) throw insertError;
 
       toast.success("Imagem salva na galeria com sucesso!");
+      onImageSaved?.();
     } catch (error) {
       console.error("Erro ao salvar imagem na galeria:", error);
       toast.error("Erro ao salvar imagem na galeria. Tente novamente.");

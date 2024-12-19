@@ -11,10 +11,12 @@ import { RunwareGeneratedImages } from "./runware/RunwareGeneratedImages";
 
 interface RunwareImageGeneratorProps {
   onImageGenerated: (imageUrl: string) => void;
+  onImageSaved?: () => void;
 }
 
 export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
   onImageGenerated,
+  onImageSaved,
 }) => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -125,7 +127,10 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
           {isGenerating ? "Gerando..." : "Gerar"}
         </Button>
 
-        <RunwareGeneratedImages images={generatedImages} />
+        <RunwareGeneratedImages 
+          images={generatedImages} 
+          onImageSaved={onImageSaved}
+        />
       </div>
     </Card>
   );
