@@ -25,14 +25,19 @@ export const ImageSlider: React.FC<ImageSliderProps> = ({ images, onSelect }) =>
     const mediaItem = {
       type: "image",
       title: "Imagem Gerada por IA",
-      url: imageUrl
+      url: imageUrl,
     };
+    
+    console.log("Dragging media item:", mediaItem);
     e.dataTransfer.setData("application/json", JSON.stringify(mediaItem));
     
     // Create a drag preview image
     const img = new Image();
     img.src = imageUrl;
     e.dataTransfer.setDragImage(img, 10, 10);
+    
+    // Set effectAllowed to all common operations
+    e.dataTransfer.effectAllowed = "all";
   };
 
   const handleImageClick = (imageUrl: string) => {

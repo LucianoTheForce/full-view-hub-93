@@ -30,12 +30,24 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
 }) => {
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
+    e.currentTarget.classList.add('ring-2', 'ring-media-hover');
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.currentTarget.classList.remove('ring-2', 'ring-media-hover');
   };
 
   const handleDrop = (e: React.DragEvent, screenId: string) => {
     e.preventDefault();
-    const mediaItem = JSON.parse(e.dataTransfer.getData("application/json"));
-    onDrop(mediaItem, screenId);
+    e.currentTarget.classList.remove('ring-2', 'ring-media-hover');
+    
+    try {
+      const mediaItem = JSON.parse(e.dataTransfer.getData("application/json"));
+      console.log("Dropped media item:", mediaItem);
+      onDrop(mediaItem, screenId);
+    } catch (error) {
+      console.error("Error parsing dropped media item:", error);
+    }
   };
 
   return (
@@ -48,6 +60,7 @@ export const ScreenGrid: React.FC<ScreenGridProps> = ({
           } hover:shadow-lg relative`}
           onClick={() => onScreenSelect(screen)}
           onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
           onDrop={(e) => handleDrop(e, screen.id)}
         >
           <Button
