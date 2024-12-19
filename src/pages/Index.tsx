@@ -54,6 +54,19 @@ const Index = () => {
     toast.success("Nova sessão iniciada!");
   };
 
+  const handleScreenUpdate = (screenId: string, updates: any) => {
+    const screenToUpdate = screens.find(screen => screen.id === screenId);
+    if (screenToUpdate) {
+      handleUpdateScreen({
+        ...screenToUpdate,
+        currentContent: {
+          ...screenToUpdate.currentContent,
+          ...updates
+        }
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-6 px-4">
@@ -81,7 +94,7 @@ const Index = () => {
             <div className="bg-white rounded-lg shadow-sm p-4">
               <ScreenControls 
                 selectedScreen={selectedScreen}
-                onUpdateScreen={handleUpdateScreen}
+                onUpdateScreen={handleScreenUpdate}
               />
             </div>
             <div className="bg-white rounded-lg shadow-sm p-4">
@@ -93,7 +106,6 @@ const Index = () => {
             </div>
           </div>
           
-          {/* Coluna Central - Telas */}
           <div className="lg:col-span-4">
             <div className="bg-white rounded-lg shadow-sm p-4">
               <div className="flex justify-between items-center mb-4">
