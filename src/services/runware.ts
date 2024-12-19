@@ -77,7 +77,7 @@ export class RunwareService {
               this.receivedImages.set(taskUUID, currentImages);
               
               const callback = this.messageCallbacks.get(taskUUID);
-              if (callback && currentImages.length === (item.expectedResults || 1)) {
+              if (callback && currentImages.length === item.expectedResults) {
                 callback(currentImages);
                 this.messageCallbacks.delete(taskUUID);
                 this.receivedImages.delete(taskUUID);
@@ -156,7 +156,7 @@ export class RunwareService {
         CFGScale: params.CFGScale || 1,
         guidance: params.guidance || 3.5,
         scheduler: params.scheduler || "FlowMatchEulerDiscreteScheduler",
-        strength: params.strength || 0.8,
+        strength: params.strength || 1,
         lora: params.lora || [],
         expectedResults: numberResults,
         ...params,
