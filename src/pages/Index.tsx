@@ -9,18 +9,21 @@ import { SessionManager } from "@/components/SessionManager";
 import { useScreens } from "@/hooks/useScreens";
 import { useMediaItems } from "@/hooks/useMediaItems";
 import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
+import { Plus, FolderOpen } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import type { Session } from "@/hooks/useSessions";
+import { useSessions } from "@/hooks/useSessions";
+import { toast } from "sonner";
 
 type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
   url: string;
 };
 
 const Index = () => {
-  const { screens, selectedScreen, handleScreenSelect, handleUpdateScreen, handleMediaDrop, handleRemoveScreen, addNewScreen } = useScreens();
+  const { screens, selectedScreen, handleScreenSelect, handleUpdateScreen, handleMediaDrop, handleRemoveScreen, addNewScreen, resetScreens } = useScreens();
   const { mediaItems, loadMediaItems } = useMediaItems();
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const { saveSession } = useSessions();
 
   const handleImageGenerated = (imageUrl: string) => {
     setGeneratedImages((prev) => [...prev, imageUrl]);
@@ -37,13 +40,18 @@ const Index = () => {
   };
 
   const handleLoadSession = (session: Session) => {
-    // Implementar a lógica para carregar a sessão
-    console.log("Carregando sessão:", session);
+    resetScreens(session.screens);
+    toast.success("Sessão carregada com sucesso!");
   };
 
   const handleSaveSession = async (name: string) => {
-    // Implementar a lógica para salvar a sessão
-    console.log("Salvando sessão:", name);
+    await saveSession(name, screens, mediaItems);
+    toast.success("Sessão salva com sucesso!");
+  };
+
+  const handleNewSession = () => {
+    resetScreens([]);
+    toast.success("Nova sessão iniciada!");
   };
 
   return (
@@ -51,14 +59,24 @@ const Index = () => {
       <div className="container mx-auto py-6 px-4">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">Central de Controle</h1>
-          <SessionManager
-            onLoadSession={handleLoadSession}
-            onSaveSession={handleSaveSession}
-          />
+          <div className="flex gap-2">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="gap-2"
+              onClick={handleNewSession}
+            >
+              <Plus className="w-4 h-4" />
+              Nova Sessão
+            </Button>
+            <SessionManager
+              onLoadSession={handleLoadSession}
+              onSaveSession={handleSaveSession}
+            />
+          </div>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Coluna da Esquerda - Controles e Geração de Imagens */}
           <div className="lg:col-span-3 space-y-4">
             <div className="bg-white rounded-lg shadow-sm p-4">
               <ScreenControls 
@@ -74,7 +92,7 @@ const Index = () => {
               <ImageSlider images={generatedImages} onSelect={handleGeneratedImageSelect} />
             </div>
           </div>
-
+          
           {/* Coluna Central - Telas */}
           <div className="lg:col-span-4">
             <div className="bg-white rounded-lg shadow-sm p-4">
@@ -99,7 +117,6 @@ const Index = () => {
             </div>
           </div>
 
-          {/* Coluna da Direita - Galeria e Upload */}
           <div className="lg:col-span-5 space-y-4">
             <div className="bg-white rounded-lg shadow-sm h-[calc(100vh-200px)]">
               <h2 className="text-xl font-semibold p-4 border-b">Galeria de Mídia</h2>
