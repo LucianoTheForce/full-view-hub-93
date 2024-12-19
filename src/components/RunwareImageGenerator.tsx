@@ -20,10 +20,8 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
   const [model, setModel] = useState("runware:100@1");
   const [numberResults, setNumberResults] = useState(1);
   const [outputFormat, setOutputFormat] = useState<"WEBP" | "PNG" | "JPEG">("WEBP");
-  // Increased CFG Scale for better prompt adherence
   const [cfgScale, setCfgScale] = useState(13);
   const [scheduler, setScheduler] = useState("FlowMatchEulerDiscreteScheduler");
-  // Increased strength for more stable results
   const [strength, setStrength] = useState(1);
   const [promptWeighting, setPromptWeighting] = useState<"compel" | "sdEmbeds" | null>(null);
   const [seed, setSeed] = useState<string>("");
@@ -57,14 +55,24 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
         lora: [],
       };
 
-      // Only include promptWeighting if it's supported by the model
       if (model !== "runware:100@1" && promptWeighting) {
         params.promptWeighting = promptWeighting;
       }
 
       const result = await runwareService.generateImage(params);
-      onImageGenerated(result.imageURL);
-      toast.success("Imagem gerada com sucesso!");
+      
+      // Handle multiple images if they were generated
+      if (Array.isArray(result)) {
+        result.forEach(image => {
+          if (image.imageURL) {
+            onImageGenerated(image.imageURL);
+          }
+        });
+        toast.success(`${result.length} imagens geradas com sucesso!`);
+      } else if (result.imageURL) {
+        onImageGenerated(result.imageURL);
+        toast.success("Imagem gerada com sucesso!");
+      }
     } catch (error) {
       console.error("Erro ao gerar imagem:", error);
       toast.error("Erro ao gerar imagem. Tente novamente.");

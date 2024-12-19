@@ -103,7 +103,6 @@ export class RunwareService {
       
       console.log("Sending authentication message");
       
-      // Set up a one-time authentication callback
       const authCallback = (event: MessageEvent) => {
         const response = JSON.parse(event.data);
         if (response.data?.[0]?.taskType === "authentication") {
@@ -117,8 +116,7 @@ export class RunwareService {
     });
   }
 
-  async generateImage(params: GenerateImageParams): Promise<GeneratedImage> {
-    // Wait for connection and authentication before proceeding
+  async generateImage(params: GenerateImageParams): Promise<GeneratedImage[]> {
     await this.connectionPromise;
 
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.isAuthenticated) {
@@ -159,7 +157,9 @@ export class RunwareService {
         if (data.error) {
           reject(new Error(data.errorMessage));
         } else {
-          resolve(data);
+          // Always return an array of images
+          const images = Array.isArray(data) ? data : [data];
+          resolve(images);
         }
       });
 
