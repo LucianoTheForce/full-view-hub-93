@@ -1,6 +1,5 @@
 import React from "react";
 import { Card } from "@/components/ui/card";
-import { Play, Image as ImageIcon } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
@@ -18,7 +17,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
   };
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 p-4">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 p-4">
       {items.map((item) => (
         <Card
           key={item.id}
@@ -27,27 +26,20 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
           draggable
           onDragStart={(e) => handleDragStart(e, item)}
         >
-          <div className="aspect-video relative">
-            {item.type === "video" ? (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/60 transition-colors">
-                <Play className="w-12 h-12 text-white opacity-75 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center bg-black/50 group-hover:bg-black/60 transition-colors">
-                <ImageIcon className="w-12 h-12 text-white opacity-75 group-hover:opacity-100 transition-opacity" />
-              </div>
-            )}
+          <div className="aspect-square relative">
             <img
               src={item.type === "video" ? `${item.url}#t=0.1` : item.url}
               alt={item.title}
               className="w-full h-full object-cover"
             />
-          </div>
-          <div className="p-3">
-            <h3 className="font-medium text-sm truncate">{item.title}</h3>
-            <p className="text-xs text-muted-foreground">
-              {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
-            </p>
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <div className="flex flex-col items-center justify-center h-full text-white p-2">
+                <p className="text-sm font-medium text-center">{item.title}</p>
+                <p className="text-xs mt-1">
+                  {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                </p>
+              </div>
+            </div>
           </div>
         </Card>
       ))}
