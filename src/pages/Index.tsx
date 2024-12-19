@@ -9,7 +9,7 @@ import { SessionManager } from "@/components/SessionManager";
 import { useScreens } from "@/hooks/useScreens";
 import { useMediaItems } from "@/hooks/useMediaItems";
 import { Button } from "@/components/ui/button";
-import { Plus, FolderOpen } from "lucide-react";
+import { Plus } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 import type { Session } from "@/hooks/useSessions";
 import { useSessions } from "@/hooks/useSessions";
@@ -20,7 +20,16 @@ type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
 };
 
 const Index = () => {
-  const { screens, selectedScreen, handleScreenSelect, handleUpdateScreen, handleMediaDrop, handleRemoveScreen, addNewScreen, resetScreens } = useScreens();
+  const { 
+    screens, 
+    selectedScreen, 
+    handleScreenSelect, 
+    handleUpdateScreen, 
+    handleMediaDrop, 
+    handleRemoveScreen, 
+    addNewScreen, 
+    resetScreens 
+  } = useScreens();
   const { mediaItems, loadMediaItems } = useMediaItems();
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const { saveSession } = useSessions();
@@ -57,13 +66,14 @@ const Index = () => {
   const handleScreenUpdate = (screenId: string, updates: any) => {
     const screenToUpdate = screens.find(screen => screen.id === screenId);
     if (screenToUpdate) {
-      handleUpdateScreen({
+      const updatedScreen = {
         ...screenToUpdate,
-        currentContent: {
+        currentContent: screenToUpdate.currentContent ? {
           ...screenToUpdate.currentContent,
           ...updates
-        }
-      });
+        } : undefined
+      };
+      handleUpdateScreen(updatedScreen);
     }
   };
 
@@ -134,7 +144,7 @@ const Index = () => {
               <h2 className="text-xl font-semibold p-4 border-b">Galeria de Mídia</h2>
               <MediaGallery 
                 items={mediaItems} 
-                onSelect={(item) => handleMediaDrop(item, selectedScreen?.id || '')} 
+                onSelect={(item) => selectedScreen && handleMediaDrop(item, selectedScreen.id)} 
               />
             </div>
             <div className="bg-white rounded-lg shadow-sm p-4">
