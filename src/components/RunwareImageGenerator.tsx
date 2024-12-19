@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import { toast } from "sonner";
-import { RunwareService, GenerateImageParams } from "@/services/runware";
+import { RunwareService, GenerateImageParams, GeneratedImage } from "@/services/runware";
 import { supabase } from "@/integrations/supabase/client";
 import { RunwarePromptInput } from "./runware/RunwarePromptInput";
 import { RunwareModelSettings } from "./runware/RunwareModelSettings";
@@ -61,18 +61,13 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
 
       const result = await runwareService.generateImage(params);
       
-      // Handle multiple images if they were generated
-      if (Array.isArray(result)) {
-        result.forEach(image => {
-          if (image.imageURL) {
-            onImageGenerated(image.imageURL);
-          }
-        });
-        toast.success(`${result.length} imagens geradas com sucesso!`);
-      } else if (result.imageURL) {
-        onImageGenerated(result.imageURL);
-        toast.success("Imagem gerada com sucesso!");
-      }
+      result.forEach((image: GeneratedImage) => {
+        if (image.imageURL) {
+          onImageGenerated(image.imageURL);
+        }
+      });
+      
+      toast.success(`${result.length} ${result.length === 1 ? 'imagem gerada' : 'imagens geradas'} com sucesso!`);
     } catch (error) {
       console.error("Erro ao gerar imagem:", error);
       toast.error("Erro ao gerar imagem. Tente novamente.");
