@@ -20,9 +20,11 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
   const [model, setModel] = useState("runware:100@1");
   const [numberResults, setNumberResults] = useState(1);
   const [outputFormat, setOutputFormat] = useState<"WEBP" | "PNG" | "JPEG">("WEBP");
-  const [cfgScale, setCfgScale] = useState(1);
+  // Increased CFG Scale for better prompt adherence
+  const [cfgScale, setCfgScale] = useState(13);
   const [scheduler, setScheduler] = useState("FlowMatchEulerDiscreteScheduler");
-  const [strength, setStrength] = useState(0.8);
+  // Increased strength for more stable results
+  const [strength, setStrength] = useState(1);
   const [promptWeighting, setPromptWeighting] = useState<"compel" | "sdEmbeds" | null>(null);
   const [seed, setSeed] = useState<string>("");
 
