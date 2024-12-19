@@ -25,7 +25,7 @@ const Index = () => {
     selectedScreen, 
     handleScreenSelect, 
     handleUpdateScreen, 
-    handleMediaDrop: onMediaDrop, 
+    handleMediaDrop, 
     handleRemoveScreen, 
     addNewScreen, 
     resetScreens 
@@ -40,11 +40,17 @@ const Index = () => {
 
   const handleGeneratedImageSelect = (imageUrl: string) => {
     if (selectedScreen) {
-      handleMediaDrop({
-        type: "image",
+      const mediaItem: MediaItem = {
+        id: crypto.randomUUID(),
         title: "Imagem Gerada por IA",
-        url: imageUrl
-      }, selectedScreen.id);
+        type: "image",
+        url: imageUrl,
+        file_path: `ai-generated/ai-image-${Date.now()}.webp`,
+        file_size: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      handleMediaDrop(mediaItem, selectedScreen.id);
     }
   };
 
@@ -61,27 +67,6 @@ const Index = () => {
   const handleNewSession = () => {
     resetScreens([]);
     toast.success("Nova sessão iniciada!");
-  };
-
-  const handleMediaDrop = (mediaItem: MediaItem, screenId: string) => {
-    if (!screenId) return;
-    
-    onMediaDrop(mediaItem, screenId);
-  };
-
-  const handleScreenUpdate = (screenId: string, updates: any) => {
-    const screenToUpdate = screens.find(screen => screen.id === screenId);
-    if (!screenToUpdate) return;
-
-    const updatedScreen = {
-      ...screenToUpdate,
-      currentContent: {
-        ...(screenToUpdate.currentContent || {}),
-        ...updates
-      }
-    };
-
-    handleUpdateScreen(updatedScreen);
   };
 
   return (
@@ -111,7 +96,7 @@ const Index = () => {
             <div className="bg-white rounded-lg shadow-sm">
               <ScreenControls 
                 selectedScreen={selectedScreen}
-                onUpdateScreen={handleScreenUpdate}
+                onUpdateScreen={handleUpdateScreen}
               />
             </div>
             <div className="bg-white rounded-lg shadow-sm p-4">
