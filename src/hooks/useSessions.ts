@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface Session {
   id: string;
@@ -9,6 +10,16 @@ export interface Session {
   mediaItems: any[];
   createdAt: string;
 }
+
+type SessionRow = Database['public']['Tables']['sessions']['Row'];
+
+const mapSessionRowToSession = (row: SessionRow): Session => ({
+  id: row.id,
+  name: row.name,
+  screens: row.screens as any[],
+  mediaItems: row.media_items as any[],
+  createdAt: row.created_at,
+});
 
 export const useSessions = () => {
   const [sessions, setSessions] = useState<Session[]>([]);
@@ -23,7 +34,7 @@ export const useSessions = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setSessions(data || []);
+      setSessions((data || []).map(mapSessionRowToSession));
     } catch (error) {
       console.error('Erro ao carregar sessões:', error);
       toast.error('Não foi possível carregar as sessões');
@@ -46,9 +57,9 @@ export const useSessions = () => {
 
       if (error) throw error;
 
-      setSessions(prev => [data, ...prev]);
+      setSessions(prev => [mapSessionRowToSession(data), ...prev]);
       toast.success('Sessão salva com sucesso!');
-      return data;
+      return mapSessionRowToSession(data);
     } catch (error) {
       console.error('Erro ao salvar sessão:', error);
       toast.error('Não foi possível salvar a sessão');
