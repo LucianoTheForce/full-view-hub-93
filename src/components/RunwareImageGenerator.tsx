@@ -59,7 +59,9 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
         params.promptWeighting = promptWeighting;
       }
 
+      console.log("Generating images with params:", params);
       const result = await runwareService.generateImage(params);
+      console.log("Generated images result:", result);
       
       result.forEach((image: GeneratedImage) => {
         if (image.imageURL) {
