@@ -26,9 +26,10 @@ export class RunwareService {
   private ws: WebSocket | null = null;
   private apiKey: string | null = null;
   private connectionSessionUUID: string | null = null;
-  private messageCallbacks: Map<string, (data: any) => void> = new Map();
+  private messageCallbacks: Map<string, (data: any[]) => void> = new Map();
   private isAuthenticated: boolean = false;
   private connectionPromise: Promise<void> | null = null;
+  private receivedImages: Map<string, GeneratedImage[]> = new Map();
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -61,11 +62,24 @@ export class RunwareService {
               console.log("Authentication successful, session UUID:", item.connectionSessionUUID);
               this.connectionSessionUUID = item.connectionSessionUUID;
               this.isAuthenticated = true;
-            } else {
-              const callback = this.messageCallbacks.get(item.taskUUID);
-              if (callback) {
-                callback(item);
-                this.messageCallbacks.delete(item.taskUUID);
+            } else if (item.taskType === "imageInference") {
+              const taskUUID = item.taskUUID;
+              const currentImages = this.receivedImages.get(taskUUID) || [];
+              const newImage: GeneratedImage = {
+                imageURL: item.imageURL,
+                positivePrompt: item.positivePrompt,
+                seed: item.seed,
+                NSFWContent: item.NSFWContent,
+              };
+              
+              currentImages.push(newImage);
+              this.receivedImages.set(taskUUID, currentImages);
+              
+              const callback = this.messageCallbacks.get(taskUUID);
+              if (callback && currentImages.length === (item.expectedResults || 1)) {
+                callback(currentImages);
+                this.messageCallbacks.delete(taskUUID);
+                this.receivedImages.delete(taskUUID);
               }
             }
           });
@@ -118,7 +132,6 @@ export class RunwareService {
   }
 
   async generateImage(params: GenerateImageParams): Promise<GeneratedImage[]> {
-    // Wait for connection and authentication before proceeding
     await this.connectionPromise;
 
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN || !this.isAuthenticated) {
@@ -127,6 +140,7 @@ export class RunwareService {
     }
 
     const taskUUID = crypto.randomUUID();
+    const numberResults = params.numberResults || 1;
     
     return new Promise((resolve, reject) => {
       const message = [{
@@ -135,13 +149,14 @@ export class RunwareService {
         model: params.model || "runware:100@1",
         width: 1024,
         height: 1024,
-        numberResults: params.numberResults || 1,
+        numberResults,
         outputFormat: params.outputFormat || "WEBP",
         steps: 4,
         CFGScale: params.CFGScale || 1,
         scheduler: params.scheduler || "FlowMatchEulerDiscreteScheduler",
         strength: params.strength || 0.8,
         lora: params.lora || [],
+        expectedResults: numberResults,
         ...params,
       }];
 
@@ -155,11 +170,9 @@ export class RunwareService {
 
       console.log("Sending image generation message:", message);
 
-      this.messageCallbacks.set(taskUUID, (data) => {
-        if (data.error) {
-          reject(new Error(data.errorMessage));
-        } else {
-          resolve([data]); // Wrap single response in array for consistency
+      this.messageCallbacks.set(taskUUID, (images) => {
+        if (images.length === numberResults) {
+          resolve(images);
         }
       });
 
