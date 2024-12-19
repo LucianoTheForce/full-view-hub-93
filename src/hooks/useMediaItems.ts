@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -9,33 +8,65 @@ type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
 
 export const useMediaItems = () => {
   const [mediaItems, setMediaItems] = useState<MediaItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadMediaItems = async () => {
-    const { data, error } = await supabase
-      .from("media_items")
-      .select("*")
-      .order("created_at", { ascending: false });
+    setIsLoading(true);
+    try {
+      const { data: items, error } = await supabase
+        .from("media_items")
+        .select("*")
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Erro ao carregar mídia:", error);
-      toast.error("Não foi possível carregar os itens de mídia.");
-      return;
+      if (error) throw error;
+
+      const itemsWithUrls = await Promise.all(
+        (items || []).map(async (item) => {
+          const { data: { publicUrl } } = supabase.storage
+            .from("media")
+            .getPublicUrl(item.file_path);
+
+          return {
+            ...item,
+            url: publicUrl,
+          };
+        })
+      );
+
+      setMediaItems(itemsWithUrls);
+    } catch (error) {
+      console.error("Error loading media items:", error);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    const itemsWithUrls = await Promise.all(
-      (data || []).map(async (item) => {
-        const { data: publicUrl } = supabase.storage
-          .from("media")
-          .getPublicUrl(item.file_path);
+  const deleteMediaItem = async (itemId: string) => {
+    const item = mediaItems.find((i) => i.id === itemId);
+    if (!item) return;
 
-        return {
-          ...item,
-          url: publicUrl.publicUrl,
-        };
-      })
-    );
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from("media")
+        .remove([item.file_path]);
 
-    setMediaItems(itemsWithUrls);
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from("media_items")
+        .delete()
+        .eq("id", itemId);
+
+      if (dbError) throw dbError;
+
+      // Update local state
+      setMediaItems((prev) => prev.filter((i) => i.id !== itemId));
+    } catch (error) {
+      console.error("Error deleting media item:", error);
+      throw error;
+    }
   };
 
   useEffect(() => {
@@ -44,6 +75,8 @@ export const useMediaItems = () => {
 
   return {
     mediaItems,
+    isLoading,
     loadMediaItems,
+    deleteMediaItem,
   };
 };

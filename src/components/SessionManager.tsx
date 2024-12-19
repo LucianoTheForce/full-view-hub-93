@@ -9,6 +9,17 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import {
   Table,
   TableBody,
   TableCell,
@@ -20,6 +31,7 @@ import { Save, FolderOpen, Trash2 } from "lucide-react";
 import { useSessions, Session } from "@/hooks/useSessions";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 interface SessionManagerProps {
   onLoadSession: (session: Session) => void;
@@ -34,6 +46,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
   const [isOpen, setIsOpen] = useState(false);
   const [newSessionName, setNewSessionName] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
 
   const handleSaveSession = async () => {
     if (!newSessionName.trim()) {
@@ -44,10 +57,85 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
       await onSaveSession(newSessionName.trim());
       setNewSessionName("");
       setIsOpen(false);
+      toast({
+        title: "Sessão salva",
+        description: "Sua sessão foi salva com sucesso!",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao salvar",
+        description: "Não foi possível salvar a sessão. Tente novamente.",
+        variant: "destructive",
+      });
     } finally {
       setIsSaving(false);
     }
   };
+
+  const handleDeleteSession = async (sessionId: string) => {
+    try {
+      await deleteSession(sessionId);
+      toast({
+        title: "Sessão excluída",
+        description: "A sessão foi excluída com sucesso.",
+      });
+    } catch (error) {
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir a sessão. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const SessionRow = ({ session }: { session: Session }) => (
+    <TableRow key={session.id}>
+      <TableCell>{session.name}</TableCell>
+      <TableCell>
+        {format(new Date(session.createdAt), "dd/MM/yyyy HH:mm", {
+          locale: ptBR,
+        })}
+      </TableCell>
+      <TableCell>
+        <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              onLoadSession(session);
+              setIsOpen(false);
+            }}
+          >
+            <FolderOpen className="w-4 h-4" />
+          </Button>
+          <AlertDialog>
+            <AlertDialogTrigger asChild>
+              <Button variant="ghost" size="icon">
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Excluir sessão</AlertDialogTitle>
+                <AlertDialogDescription>
+                  Tem certeza que deseja excluir esta sessão? Esta ação não pode ser desfeita.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => handleDeleteSession(session.id)}
+                  className="bg-red-500 hover:bg-red-600"
+                >
+                  Excluir
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        </div>
+      </TableCell>
+    </TableRow>
+  );
 
   return (
     <div className="flex gap-2">
@@ -84,35 +172,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                 </TableHeader>
                 <TableBody>
                   {sessions.map((session) => (
-                    <TableRow key={session.id}>
-                      <TableCell>{session.name}</TableCell>
-                      <TableCell>
-                        {format(new Date(session.createdAt), "dd/MM/yyyy HH:mm", {
-                          locale: ptBR,
-                        })}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => {
-                              onLoadSession(session);
-                              setIsOpen(false);
-                            }}
-                          >
-                            <FolderOpen className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteSession(session.id)}
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                    <SessionRow key={session.id} session={session} />
                   ))}
                 </TableBody>
               </Table>
@@ -142,23 +202,7 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
               </TableHeader>
               <TableBody>
                 {sessions.map((session) => (
-                  <TableRow key={session.id}>
-                    <TableCell>{session.name}</TableCell>
-                    <TableCell>
-                      {format(new Date(session.createdAt), "dd/MM/yyyy HH:mm", {
-                        locale: ptBR,
-                      })}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => onLoadSession(session)}
-                      >
-                        <FolderOpen className="w-4 h-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
+                  <SessionRow key={session.id} session={session} />
                 ))}
               </TableBody>
             </Table>

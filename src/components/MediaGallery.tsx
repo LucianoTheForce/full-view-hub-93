@@ -1,6 +1,21 @@
 import React, { useState, useRef } from "react";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
@@ -10,11 +25,17 @@ type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
 interface MediaGalleryProps {
   items: MediaItem[];
   onSelect: (item: MediaItem) => void;
+  onDelete?: (item: MediaItem) => void;
 }
 
-export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) => {
+export const MediaGallery: React.FC<MediaGalleryProps> = ({ 
+  items, 
+  onSelect,
+  onDelete 
+}) => {
   const [gridSize, setGridSize] = useState(4);
   const videoRefs = useRef<{ [key: string]: HTMLVideoElement }>({});
+  const { toast } = useToast();
 
   const handleDragStart = (e: React.DragEvent, item: MediaItem) => {
     e.dataTransfer.setData("application/json", JSON.stringify(item));
@@ -35,6 +56,38 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
     }
   };
 
+  const handleDelete = async (item: MediaItem) => {
+    try {
+      // Delete from storage
+      const { error: storageError } = await supabase.storage
+        .from("media")
+        .remove([item.file_path]);
+
+      if (storageError) throw storageError;
+
+      // Delete from database
+      const { error: dbError } = await supabase
+        .from("media_items")
+        .delete()
+        .eq("id", item.id);
+
+      if (dbError) throw dbError;
+
+      onDelete?.(item);
+      toast({
+        title: "Mídia excluída",
+        description: "O arquivo foi excluído com sucesso.",
+      });
+    } catch (error) {
+      console.error("Erro ao excluir mídia:", error);
+      toast({
+        title: "Erro ao excluir",
+        description: "Não foi possível excluir o arquivo. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getGridColumns = () => {
     if (gridSize <= 2) return "grid-cols-1 sm:grid-cols-2";
     if (gridSize === 3) return "grid-cols-2 sm:grid-cols-3";
@@ -46,7 +99,9 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
   return (
     <div className="h-full flex flex-col">
       <div className="flex items-center gap-4 px-4 py-3 border-b">
-        <span className="text-sm text-muted-foreground whitespace-nowrap">Tamanho do Grid:</span>
+        <span className="text-sm text-muted-foreground whitespace-nowrap">
+          Tamanho do Grid:
+        </span>
         <Slider
           value={[gridSize]}
           onValueChange={(value) => setGridSize(value[0])}
@@ -94,6 +149,38 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
                   {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
                 </p>
               </div>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="absolute top-2 right-2 text-white hover:text-red-500"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Excluir mídia</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja excluir esta mídia? Esta ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(item);
+                      }}
+                      className="bg-red-500 hover:bg-red-600"
+                    >
+                      Excluir
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </Card>
         ))}
