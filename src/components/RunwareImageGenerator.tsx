@@ -1,12 +1,13 @@
 import React, { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Wand2, Save } from "lucide-react";
+import { Wand2 } from "lucide-react";
 import { toast } from "sonner";
 import { RunwareService, GenerateImageParams, GeneratedImage } from "@/services/runware";
 import { supabase } from "@/integrations/supabase/client";
 import { RunwarePromptInput } from "./runware/RunwarePromptInput";
 import { RunwareModelSettings } from "./runware/RunwareModelSettings";
+import { RunwareGeneratedImages } from "./runware/RunwareGeneratedImages";
 
 interface RunwareImageGeneratorProps {
   onImageGenerated: (imageUrl: string) => void;
@@ -20,8 +21,8 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
   const [model, setModel] = useState("runware:100@1");
   const [numberResults, setNumberResults] = useState(1);
   const [outputFormat, setOutputFormat] = useState<"WEBP" | "PNG" | "JPEG">("WEBP");
-  const [cfgScale, setCfgScale] = useState(1); // Default CFG value for Flux
-  const [guidance, setGuidance] = useState(3.5); // Default Guidance value for Flux
+  const [cfgScale, setCfgScale] = useState(1);
+  const [guidance, setGuidance] = useState(3.5);
   const [scheduler, setScheduler] = useState("FlowMatchEulerDiscreteScheduler");
   const [strength, setStrength] = useState(1);
   const [promptWeighting, setPromptWeighting] = useState<"compel" | "sdEmbeds" | null>(null);
@@ -82,40 +83,6 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
     }
   };
 
-  const handleSaveToGallery = async (image: GeneratedImage) => {
-    try {
-      // Download the image
-      const response = await fetch(image.imageURL);
-      const blob = await response.blob();
-      const file = new File([blob], `ai-image-${Date.now()}.${outputFormat.toLowerCase()}`, { type: `image/${outputFormat.toLowerCase()}` });
-      
-      // Upload to Supabase Storage
-      const filePath = `ai-generated/${file.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from('media')
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Create media item record
-      const { error: insertError } = await supabase
-        .from('media_items')
-        .insert({
-          title: "Imagem Gerada por IA",
-          type: "image",
-          file_path: filePath,
-          file_size: file.size,
-        });
-
-      if (insertError) throw insertError;
-
-      toast.success("Imagem salva na galeria com sucesso!");
-    } catch (error) {
-      console.error("Erro ao salvar imagem na galeria:", error);
-      toast.error("Erro ao salvar imagem na galeria. Tente novamente.");
-    }
-  };
-
   return (
     <Card className="p-4 space-y-4">
       <h3 className="text-lg font-semibold">Gerar Imagem com IA</h3>
@@ -158,31 +125,7 @@ export const RunwareImageGenerator: React.FC<RunwareImageGeneratorProps> = ({
           {isGenerating ? "Gerando..." : "Gerar"}
         </Button>
 
-        {generatedImages.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Imagens Geradas</h4>
-            <div className="grid grid-cols-2 gap-2">
-              {generatedImages.map((image, index) => (
-                <div key={index} className="relative group">
-                  <img
-                    src={image.imageURL}
-                    alt={`Imagem gerada ${index + 1}`}
-                    className="w-full aspect-square object-cover rounded-lg"
-                  />
-                  <Button
-                    variant="secondary"
-                    size="sm"
-                    className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                    onClick={() => handleSaveToGallery(image)}
-                  >
-                    <Save className="w-4 h-4 mr-1" />
-                    Salvar na Galeria
-                  </Button>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        <RunwareGeneratedImages images={generatedImages} />
       </div>
     </Card>
   );
