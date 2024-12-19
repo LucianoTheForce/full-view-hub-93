@@ -1,1 +1,4 @@
 project_id = "oeujzbsvuvqgwjykmqwj"
+
+[functions.get-runware-key]
+verify_jwt = false
