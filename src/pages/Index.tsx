@@ -66,11 +66,7 @@ const Index = () => {
   const handleMediaDrop = (mediaItem: MediaItem, screenId: string) => {
     if (!screenId) return;
     
-    onMediaDrop({
-      type: mediaItem.type,
-      title: mediaItem.title,
-      url: mediaItem.url
-    }, screenId);
+    onMediaDrop(mediaItem, screenId);
   };
 
   const handleScreenUpdate = (screenId: string, updates: any) => {
