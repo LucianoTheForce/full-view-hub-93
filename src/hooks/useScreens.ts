@@ -1,5 +1,6 @@
 import { useState } from "react";
 import type { Database } from "@/integrations/supabase/types";
+import { supabase } from "@/integrations/supabase/client";
 
 type MediaItem = Database["public"]["Tables"]["media_items"]["Row"] & {
   url: string;
@@ -28,27 +29,28 @@ export const useScreens = () => {
   };
 
   const handleUpdateScreen = (screenId: string, updates: Partial<Screen['currentContent']>) => {
-    setScreens(prevScreens =>
-      prevScreens.map(screen =>
-        screen.id === screenId
-          ? {
-              ...screen,
-              currentContent: screen.currentContent ? {
-                ...screen.currentContent,
-                ...updates
-              } : {
-                type: "image",
-                title: "",
-                url: "",
-                rotation: 0,
-                scale: 1,
-                backgroundColor: "#000000",
-                ...updates
-              }
+    const updatedScreens = screens.map(screen =>
+      screen.id === screenId
+        ? {
+            ...screen,
+            currentContent: screen.currentContent ? {
+              ...screen.currentContent,
+              ...updates
+            } : {
+              type: "image",
+              title: "",
+              url: "",
+              rotation: 0,
+              scale: 1,
+              backgroundColor: "#000000",
+              ...updates
             }
-          : screen
-      )
+          }
+        : screen
     );
+
+    setScreens(updatedScreens);
+    localStorage.setItem('screens', JSON.stringify(updatedScreens));
 
     // Update selected screen if it's the one being modified
     if (selectedScreen?.id === screenId) {
@@ -71,6 +73,16 @@ export const useScreens = () => {
         };
       });
     }
+
+    // Broadcast the update to the display page
+    const channel = supabase.channel(`screen_${screenId}`);
+    channel.subscribe().send({
+      event: 'content_update',
+      payload: {
+        screenId,
+        content: updatedScreens.find(s => s.id === screenId)?.currentContent
+      }
+    });
   };
 
   const handleMediaDrop = (mediaItem: MediaItem, screenId: string) => {
@@ -83,16 +95,17 @@ export const useScreens = () => {
       backgroundColor: "#000000"
     };
 
-    setScreens(prevScreens =>
-      prevScreens.map(screen =>
-        screen.id === screenId
-          ? {
-              ...screen,
-              currentContent: newContent,
-            }
-          : screen
-      )
+    const updatedScreens = screens.map(screen =>
+      screen.id === screenId
+        ? {
+            ...screen,
+            currentContent: newContent,
+          }
+        : screen
     );
+
+    setScreens(updatedScreens);
+    localStorage.setItem('screens', JSON.stringify(updatedScreens));
 
     // Update selected screen if it's the one receiving media
     if (selectedScreen?.id === screenId) {
@@ -101,10 +114,23 @@ export const useScreens = () => {
         currentContent: newContent
       } : null);
     }
+
+    // Broadcast the update to the display page
+    const channel = supabase.channel(`screen_${screenId}`);
+    channel.subscribe().send({
+      event: 'content_update',
+      payload: {
+        screenId,
+        content: newContent
+      }
+    });
   };
 
   const handleRemoveScreen = (screenId: string) => {
-    setScreens(prevScreens => prevScreens.filter(screen => screen.id !== screenId));
+    const updatedScreens = screens.filter(screen => screen.id !== screenId);
+    setScreens(updatedScreens);
+    localStorage.setItem('screens', JSON.stringify(updatedScreens));
+    
     if (selectedScreen?.id === screenId) {
       setSelectedScreen(null);
     }
@@ -116,12 +142,15 @@ export const useScreens = () => {
       name: `Tela ${screens.length + 1}`,
       isActive: true,
     };
-    setScreens(prevScreens => [...prevScreens, newScreen]);
+    const updatedScreens = [...screens, newScreen];
+    setScreens(updatedScreens);
+    localStorage.setItem('screens', JSON.stringify(updatedScreens));
   };
 
   const resetScreens = (newScreens: Screen[] = []) => {
     setScreens(newScreens);
     setSelectedScreen(null);
+    localStorage.setItem('screens', JSON.stringify(newScreens));
   };
 
   return {
