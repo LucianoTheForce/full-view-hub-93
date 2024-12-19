@@ -74,7 +74,7 @@ const Index = () => {
         <div className="lg:col-span-3 space-y-4">
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4">Galeria de Mídia</h2>
-            <MediaGallery items={mediaItems} onSelect={handleMediaSelect} />
+            <MediaGallery items={mediaItems} onSelect={(item) => handleMediaDrop(item, selectedScreen?.id || '')} />
           </div>
           <div className="bg-white rounded-lg shadow-sm">
             <h2 className="text-xl font-semibold p-4">Upload</h2>
