@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { MediaGallery } from "@/components/MediaGallery";
 import { ScreenGrid } from "@/components/ScreenGrid";
 import { ScreenControls } from "@/components/ScreenControls";
@@ -7,6 +7,8 @@ import { RunwareImageGenerator } from "@/components/RunwareImageGenerator";
 import { ImageSlider } from "@/components/ImageSlider";
 import { useScreens } from "@/hooks/useScreens";
 import { useMediaItems } from "@/hooks/useMediaItems";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 const Index = () => {
   const { screens, selectedScreen, handleScreenSelect, handleUpdateScreen, handleMediaDrop, handleRemoveScreen, addNewScreen } = useScreens();
