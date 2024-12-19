@@ -148,7 +148,7 @@ export const useScreens = () => {
 
   const addNewScreen = () => {
     const newScreen: Screen = {
-      id: crypto.randomUUID(),
+      id: String(screens.length + 1),
       name: `Tela ${screens.length + 1}`,
       isActive: true,
     };
