@@ -96,7 +96,10 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => onLoadSession(session)}
+                            onClick={() => {
+                              onLoadSession(session);
+                              setIsOpen(false);
+                            }}
                           >
                             <FolderOpen className="w-4 h-4" />
                           </Button>
@@ -114,6 +117,51 @@ export const SessionManager: React.FC<SessionManagerProps> = ({
                 </TableBody>
               </Table>
             </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline" size="sm" className="gap-2">
+            <FolderOpen className="w-4 h-4" />
+            Carregar Sessão
+          </Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Carregar Sessão</DialogTitle>
+          </DialogHeader>
+          <div className="border rounded-lg">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Nome</TableHead>
+                  <TableHead>Data</TableHead>
+                  <TableHead className="w-[100px]">Ações</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {sessions.map((session) => (
+                  <TableRow key={session.id}>
+                    <TableCell>{session.name}</TableCell>
+                    <TableCell>
+                      {format(new Date(session.createdAt), "dd/MM/yyyy HH:mm", {
+                        locale: ptBR,
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => onLoadSession(session)}
+                      >
+                        <FolderOpen className="w-4 h-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         </DialogContent>
       </Dialog>

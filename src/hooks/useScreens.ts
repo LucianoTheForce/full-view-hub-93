@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { Database } from "@/integrations/supabase/types";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -21,8 +21,19 @@ interface Screen {
 }
 
 export const useScreens = () => {
-  const [screens, setScreens] = useState<Screen[]>([]);
+  // Carrega o estado inicial do localStorage
+  const initialScreens = () => {
+    const saved = localStorage.getItem('screens');
+    return saved ? JSON.parse(saved) : [];
+  };
+
+  const [screens, setScreens] = useState<Screen[]>(initialScreens);
   const [selectedScreen, setSelectedScreen] = useState<Screen | null>(null);
+
+  // Persiste as mudanças no localStorage sempre que screens mudar
+  useEffect(() => {
+    localStorage.setItem('screens', JSON.stringify(screens));
+  }, [screens]);
 
   const handleScreenSelect = (screen: Screen) => {
     setSelectedScreen(screen);
@@ -50,7 +61,6 @@ export const useScreens = () => {
     );
 
     setScreens(updatedScreens);
-    localStorage.setItem('screens', JSON.stringify(updatedScreens));
 
     // Update selected screen if it's the one being modified
     if (selectedScreen?.id === screenId) {
@@ -106,7 +116,6 @@ export const useScreens = () => {
     );
 
     setScreens(updatedScreens);
-    localStorage.setItem('screens', JSON.stringify(updatedScreens));
 
     // Update selected screen if it's the one receiving media
     if (selectedScreen?.id === screenId) {
@@ -131,7 +140,6 @@ export const useScreens = () => {
   const handleRemoveScreen = (screenId: string) => {
     const updatedScreens = screens.filter(screen => screen.id !== screenId);
     setScreens(updatedScreens);
-    localStorage.setItem('screens', JSON.stringify(updatedScreens));
     
     if (selectedScreen?.id === screenId) {
       setSelectedScreen(null);
@@ -146,13 +154,11 @@ export const useScreens = () => {
     };
     const updatedScreens = [...screens, newScreen];
     setScreens(updatedScreens);
-    localStorage.setItem('screens', JSON.stringify(updatedScreens));
   };
 
   const resetScreens = (newScreens: Screen[] = []) => {
     setScreens(newScreens);
     setSelectedScreen(null);
-    localStorage.setItem('screens', JSON.stringify(newScreens));
   };
 
   return {
