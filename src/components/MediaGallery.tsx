@@ -46,7 +46,7 @@ export const MediaGallery: React.FC<MediaGalleryProps> = ({ items, onSelect }) =
         {items.map((item) => (
           <Card
             key={item.id}
-            className="group relative overflow-hidden cursor-move hover:ring-2 hover:ring-media-hover transition-all duration-200 aspect-square"
+            className="group relative overflow-hidden cursor-move hover:ring-2 hover:ring-media-hover transition-all duration-200 aspect-square min-h-[240px]"
             onClick={() => onSelect(item)}
             draggable
             onDragStart={(e) => handleDragStart(e, item)}
