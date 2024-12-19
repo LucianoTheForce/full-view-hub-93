@@ -13,9 +13,9 @@ interface Screen {
     type: "video" | "image";
     title: string;
     url: string;
-    rotation?: number;
-    scale?: number;
-    backgroundColor?: string;
+    rotation: number;
+    scale: number;
+    backgroundColor: string;
   };
 }
 
@@ -33,10 +33,18 @@ export const useScreens = () => {
         screen.id === screenId
           ? {
               ...screen,
-              currentContent: {
-                ...(screen.currentContent || {}),
+              currentContent: screen.currentContent ? {
+                ...screen.currentContent,
                 ...updates
-              },
+              } : {
+                type: "image",
+                title: "",
+                url: "",
+                rotation: 0,
+                scale: 1,
+                backgroundColor: "#000000",
+                ...updates
+              }
             }
           : screen
       )
@@ -44,13 +52,24 @@ export const useScreens = () => {
 
     // Update selected screen if it's the one being modified
     if (selectedScreen?.id === screenId) {
-      setSelectedScreen(prev => prev ? {
-        ...prev,
-        currentContent: {
-          ...(prev.currentContent || {}),
-          ...updates
-        }
-      } : null);
+      setSelectedScreen(prev => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          currentContent: prev.currentContent ? {
+            ...prev.currentContent,
+            ...updates
+          } : {
+            type: "image",
+            title: "",
+            url: "",
+            rotation: 0,
+            scale: 1,
+            backgroundColor: "#000000",
+            ...updates
+          }
+        };
+      });
     }
   };
 
