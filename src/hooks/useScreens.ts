@@ -21,10 +21,16 @@ interface Screen {
 }
 
 export const useScreens = () => {
-  // Carrega o estado inicial do localStorage
+  // Carrega o estado inicial do localStorage, convertendo IDs para números simples
   const initialScreens = () => {
     const saved = localStorage.getItem('screens');
-    return saved ? JSON.parse(saved) : [];
+    if (!saved) return [];
+    const parsedScreens = JSON.parse(saved);
+    // Converte os IDs existentes para números sequenciais
+    return parsedScreens.map((screen: Screen, index: number) => ({
+      ...screen,
+      id: String(index + 1)
+    }));
   };
 
   const [screens, setScreens] = useState<Screen[]>(initialScreens);
@@ -138,7 +144,14 @@ export const useScreens = () => {
   };
 
   const handleRemoveScreen = (screenId: string) => {
-    const updatedScreens = screens.filter(screen => screen.id !== screenId);
+    const updatedScreens = screens
+      .filter(screen => screen.id !== screenId)
+      .map((screen, index) => ({
+        ...screen,
+        id: String(index + 1),
+        name: `Tela ${index + 1}`
+      }));
+    
     setScreens(updatedScreens);
     
     if (selectedScreen?.id === screenId) {
@@ -157,7 +170,12 @@ export const useScreens = () => {
   };
 
   const resetScreens = (newScreens: Screen[] = []) => {
-    setScreens(newScreens);
+    const screensWithSimpleIds = newScreens.map((screen, index) => ({
+      ...screen,
+      id: String(index + 1),
+      name: `Tela ${index + 1}`
+    }));
+    setScreens(screensWithSimpleIds);
     setSelectedScreen(null);
   };
 
