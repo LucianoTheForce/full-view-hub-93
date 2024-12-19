@@ -31,6 +31,7 @@ export class RunwareService {
   private isAuthenticated: boolean = false;
   private connectionPromise: Promise<void> | null = null;
   private receivedImages: Map<string, GeneratedImage[]> = new Map();
+  private expectedResults: Map<string, number> = new Map();
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
@@ -77,10 +78,16 @@ export class RunwareService {
               this.receivedImages.set(taskUUID, currentImages);
               
               const callback = this.messageCallbacks.get(taskUUID);
-              if (callback && currentImages.length === item.expectedResults) {
+              const expectedCount = this.expectedResults.get(taskUUID) || 1;
+              
+              console.log(`Received image ${currentImages.length} of ${expectedCount} for task ${taskUUID}`);
+              
+              if (callback && currentImages.length === expectedCount) {
+                console.log(`All ${expectedCount} images received for task ${taskUUID}, calling callback`);
                 callback(currentImages);
                 this.messageCallbacks.delete(taskUUID);
                 this.receivedImages.delete(taskUUID);
+                this.expectedResults.delete(taskUUID);
               }
             }
           });
@@ -172,13 +179,35 @@ export class RunwareService {
 
       console.log("Sending image generation message:", message);
 
+      // Store the expected number of results
+      this.expectedResults.set(taskUUID, numberResults);
+
+      // Initialize the images array for this task
+      this.receivedImages.set(taskUUID, []);
+
       this.messageCallbacks.set(taskUUID, (images) => {
-        if (images.length === numberResults) {
-          resolve(images);
-        }
+        console.log(`Resolving promise with ${images.length} images`);
+        resolve(images);
       });
 
       this.ws.send(JSON.stringify(message));
+
+      // Add timeout to prevent hanging
+      setTimeout(() => {
+        const receivedImages = this.receivedImages.get(taskUUID) || [];
+        if (receivedImages.length > 0 && receivedImages.length < numberResults) {
+          console.log(`Timeout reached with ${receivedImages.length} images, resolving anyway`);
+          resolve(receivedImages);
+          this.messageCallbacks.delete(taskUUID);
+          this.receivedImages.delete(taskUUID);
+          this.expectedResults.delete(taskUUID);
+        } else if (receivedImages.length === 0) {
+          reject(new Error("Timeout: No images received"));
+          this.messageCallbacks.delete(taskUUID);
+          this.receivedImages.delete(taskUUID);
+          this.expectedResults.delete(taskUUID);
+        }
+      }, 30000); // 30 second timeout
     });
   }
 }
